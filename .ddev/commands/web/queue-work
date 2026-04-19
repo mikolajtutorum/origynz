@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+## Description: Start the Laravel queue worker (required for GEDCOM imports)
+## Usage: queue-work
+## Example: ddev queue-work
+
+php artisan queue:work --tries=1 --timeout=600
