@@ -18,6 +18,14 @@ class GedcomTransferTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function importAndComplete(User $user, string $route, array $params): \Illuminate\Testing\TestResponse
+    {
+        $json = $this->actingAs($user)->post($route, $params);
+        $json->assertOk()->assertJsonStructure(['import_id']);
+
+        return $this->actingAs($user)->get(route('gedcom.import.complete', $json->json('import_id')));
+    }
+
     public function test_user_can_export_a_tree_as_gedcom(): void
     {
         $user = User::factory()->create();
@@ -174,7 +182,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('rivera.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
@@ -312,7 +320,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('rivera-import.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.import.store'), [
+        $response = $this->importAndComplete($user, route('trees.import.store'), [
             'tree_id' => $tree->id,
             'gedcom_file' => $file,
         ]);
@@ -351,7 +359,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('rivera-family-branch.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.import.store'), [
+        $response = $this->importAndComplete($user, route('trees.import.store'), [
             'gedcom_file' => $file,
         ]);
 
@@ -417,7 +425,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('owner-match.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
@@ -466,7 +474,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('jarocinski.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
@@ -523,7 +531,7 @@ GED;
         $gedcom = implode("\n", $lines);
         $file = UploadedFile::fake()->createWithContent('mixed-polish.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
@@ -579,7 +587,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('dates.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
@@ -637,7 +645,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('owner-reuse.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
@@ -725,7 +733,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('names.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
@@ -843,7 +851,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('rich-import.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
@@ -950,7 +958,7 @@ GED;
 
         $file = UploadedFile::fake()->createWithContent('missing-media.ged', $gedcom);
 
-        $response = $this->actingAs($user)->post(route('trees.gedcom.import', $tree), [
+        $response = $this->importAndComplete($user, route('trees.gedcom.import', $tree), [
             'gedcom_file' => $file,
         ]);
 
