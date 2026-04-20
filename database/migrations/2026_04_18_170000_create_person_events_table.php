@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('person_events', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('family_tree_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('person_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('family_tree_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('person_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('created_by')->constrained('users')->cascadeOnDelete();
             $table->string('type', 40);
             $table->string('label', 160)->nullable();
             $table->string('category', 40)->nullable();

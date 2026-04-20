@@ -7,13 +7,11 @@ use Illuminate\Http\Request;
 
 class LocaleController extends Controller
 {
-    private const SUPPORTED = ['en', 'pl', 'ar'];
-
     public function store(Request $request): RedirectResponse
     {
         $locale = $request->input('locale');
 
-        if (in_array($locale, self::SUPPORTED, true)) {
+        if (in_array($locale, array_keys(config('app.locales', [])), true)) {
             session(['locale' => $locale]);
             app()->setLocale($locale);
         }

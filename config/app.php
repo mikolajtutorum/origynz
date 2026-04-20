@@ -84,15 +84,46 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
-    'locale_meta' => [
+    /*
+    |--------------------------------------------------------------------------
+    | Supported Locales
+    |--------------------------------------------------------------------------
+    |
+    | Single source of truth for every locale the application supports.
+    | Add a new entry here and it will automatically propagate to middleware
+    | validation, the language switcher, and the profile settings form.
+    |
+    | Keys: flag emoji, short label for the topbar button, full native label
+    | for the switcher dropdown, display name for the profile select form,
+    | and text direction ('ltr' or 'rtl').
+    |
+    */
+
+    'locales' => [
         'en' => [
-            'direction' => 'ltr',
+            'flag'         => '🇬🇧',
+            'short'        => 'EN',
+            'label'        => 'English',
+            'native'       => 'English (UK)',
+            'direction'    => 'ltr',
+            'countries'    => [], // fallback — any country not matched by another locale
         ],
         'pl' => [
-            'direction' => 'ltr',
+            'flag'         => '🇵🇱',
+            'short'        => 'PL',
+            'label'        => 'Polski',
+            'native'       => 'Polski',
+            'direction'    => 'ltr',
+            'countries'    => ['PL'],
         ],
         'ar' => [
-            'direction' => 'rtl',
+            'flag'         => '🇸🇦',
+            'short'        => 'AR',
+            'label'        => 'العربية',
+            'native'       => 'Arabic',
+            'direction'    => 'rtl',
+            'countries'    => ['SA', 'AE', 'EG', 'IQ', 'JO', 'KW', 'LB', 'MA',
+                               'QA', 'SY', 'TN', 'YE', 'DZ', 'LY', 'SD', 'OM'],
         ],
     ],
 

@@ -89,6 +89,27 @@
                 viewable
             />
 
+            <div class="flex flex-col gap-3">
+                <flux:checkbox name="terms" :checked="old('terms')" required>
+                    <span>
+                        {{ __('I agree to the') }}
+                        <a href="{{ route('legal.terms') }}" target="_blank" class="underline text-blue-600 hover:text-blue-700">{{ __('Terms of Service') }}</a>
+                        {{ __('and') }}
+                        <a href="{{ route('legal.privacy') }}" target="_blank" class="underline text-blue-600 hover:text-blue-700">{{ __('Privacy Policy') }}</a>
+                    </span>
+                </flux:checkbox>
+                @error('terms')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+
+                <flux:checkbox name="age_confirmation" :checked="old('age_confirmation')" required>
+                    {{ __('I confirm I am 13 years of age or older') }}
+                </flux:checkbox>
+                @error('age_confirmation')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
                     {{ __('Create account') }}

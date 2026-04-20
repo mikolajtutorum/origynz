@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('media_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('family_tree_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('person_id')->nullable()->constrained('people')->nullOnDelete();
-            $table->foreignId('uploaded_by')->constrained('users')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('family_tree_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('person_id')->nullable()->constrained('people')->nullOnDelete();
+            $table->foreignUuid('uploaded_by')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->string('file_name');
             $table->string('file_path')->nullable();

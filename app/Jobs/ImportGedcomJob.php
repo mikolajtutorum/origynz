@@ -23,9 +23,9 @@ class ImportGedcomJob implements ShouldQueue
 
     public function __construct(
         private readonly string $importId,
-        private readonly int $treeId,
+        private readonly string $treeId,
         private readonly string $filePath,
-        private readonly int $userId,
+        private readonly string $userId,
     ) {}
 
     public function handle(GedcomImporter $importer): void

@@ -11,12 +11,12 @@ use App\Models\FamilyTreeMembershipRequest;
 use App\Models\User;
 use Closure;
 use Illuminate\Support\Collection;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\Permission;
+use App\Models\Role;
 
 class TreeAccessService
 {
-    private const SITE_TEAM_ID = 0;
+    public const SITE_TEAM_ID = '00000000-0000-0000-0000-000000000000';
 
     public function can(User $user, FamilyTree $tree, TreePermission $permission): bool
     {

@@ -59,7 +59,7 @@ class GedcomController extends Controller
     public function importFromPage(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'tree_id' => ['nullable', 'integer'],
+            'tree_id' => ['nullable', 'string'],
             'tree_name' => ['nullable', 'string', 'max:120'],
             'gedcom_file' => ['required', 'file', 'max:102400'],
         ]);
@@ -67,7 +67,7 @@ class GedcomController extends Controller
         $tree = filled($data['tree_id'] ?? null)
             ? FamilyTree::query()
                 ->manageableBy($request->user())
-                ->findOrFail((int) $data['tree_id'])
+                ->findOrFail($data['tree_id'])
             : $this->createTreeForImport($request, $data);
 
         return $this->dispatchImport($request, $tree, $data['gedcom_file']);

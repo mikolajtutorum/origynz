@@ -646,7 +646,7 @@ class GedcomImporter
         return $line;
     }
 
-    public function shouldPromptForOwnerSelection(FamilyTree $tree, int $userId): bool
+    public function shouldPromptForOwnerSelection(FamilyTree $tree, string $userId): bool
     {
         return $this->placeholderOwnerPerson($tree, $userId) !== null;
     }
@@ -809,7 +809,7 @@ class GedcomImporter
             ->squish();
     }
 
-    private function placeholderOwnerPerson(FamilyTree $tree, int $userId): ?Person
+    private function placeholderOwnerPerson(FamilyTree $tree, string $userId): ?Person
     {
         if (! $tree->owner_person_id) {
             return null;
@@ -998,7 +998,7 @@ class GedcomImporter
     /**
      * @param  array<string, mixed>  $record
      */
-    private function createMediaItem(FamilyTree $tree, int $userId, array $record, ?int $personId = null)
+    private function createMediaItem(FamilyTree $tree, string $userId, array $record, ?string $personId = null)
     {
         $fileReference = $record['FILE'] ?? 'imported-media';
         $storedMedia = $this->downloadExternalMediaIfPossible((string) $fileReference);
@@ -1108,7 +1108,7 @@ class GedcomImporter
     /**
      * @param  array<int, array<string, mixed>>  $events
      */
-    private function createImportedEvents(Person $person, array $events, int $userId): void
+    private function createImportedEvents(Person $person, array $events, string $userId): void
     {
         foreach ($events as $index => $event) {
             $tag = $event['TAG'] ?? null;

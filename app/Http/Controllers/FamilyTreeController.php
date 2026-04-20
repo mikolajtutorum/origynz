@@ -211,7 +211,7 @@ class FamilyTreeController extends Controller
             ];
         }
 
-        $requestedFocusId = $request->has('focus') ? (int) $request->input('focus') : null;
+        $requestedFocusId = $request->has('focus') ? (string) $request->input('focus') : null;
         $focusPerson = null;
 
         if ($requestedFocusId !== null && array_key_exists($requestedFocusId, $peopleById)) {
@@ -438,11 +438,11 @@ class FamilyTreeController extends Controller
         $this->treeAccess->authorize($request->user(), $tree, TreePermission::Owner);
 
         $data = $request->validate([
-            'person_id' => ['required', 'integer'],
+            'person_id' => ['required', 'string'],
             'return_to' => ['nullable', 'url'],
         ]);
 
-        $person = $tree->people()->findOrFail((int) $data['person_id']);
+        $person = $tree->people()->findOrFail($data['person_id']);
         $previousOwner = $tree->owner_person_id !== null ? $tree->people()->find($tree->owner_person_id) : null;
 
         $tree->update(['owner_person_id' => $person->id]);
@@ -510,9 +510,9 @@ class FamilyTreeController extends Controller
     }
 
     /**
-     * @param  array<int, list<int>>  $map
+     * @param  array<string, list<string>>  $map
      */
-    private function pushUnique(array &$map, int $key, int $value): void
+    private function pushUnique(array &$map, string $key, string $value): void
     {
         $map[$key] ??= [];
 
@@ -522,9 +522,9 @@ class FamilyTreeController extends Controller
     }
 
     /**
-     * @param  array<int, array<int, string|null>>  $map
+     * @param  array<string, array<string, string|null>>  $map
      */
-    private function storeParentSubtype(array &$map, int $parentId, int $childId, ?string $subtype): void
+    private function storeParentSubtype(array &$map, string $parentId, string $childId, ?string $subtype): void
     {
         $map[$parentId] ??= [];
         $map[$parentId][$childId] = $this->normalizeParentRelationshipSubtype($subtype);
@@ -544,10 +544,10 @@ class FamilyTreeController extends Controller
                 continue;
             }
 
-            $ids[] = (int) $value;
+            $ids[] = $value;
         }
 
-        $ids = array_values(array_unique(array_filter($ids, fn (int $id) => $id > 0)));
+        $ids = array_values(array_unique($ids));
 
         sort($ids);
 
@@ -555,8 +555,8 @@ class FamilyTreeController extends Controller
     }
 
     /**
-     * @param  array<int, Person>  $peopleById
-     * @param  list<int>  $ids
+     * @param  array<string, Person>  $peopleById
+     * @param  list<string>  $ids
      * @return list<Person>
      */
     private function peopleFromIds(array $peopleById, array $ids): array
@@ -643,7 +643,7 @@ class FamilyTreeController extends Controller
         return 'Unknown relationship';
     }
 
-    private function distanceViaMap(int $startId, int $targetId, array $map): ?int
+    private function distanceViaMap(string $startId, string $targetId, array $map): ?int
     {
         $visited = [$startId => true];
         $queue = [[$startId, 0]];
@@ -668,7 +668,7 @@ class FamilyTreeController extends Controller
         return null;
     }
 
-    private function shareParent(int $leftId, int $rightId, array $parentsMap): bool
+    private function shareParent(string $leftId, string $rightId, array $parentsMap): bool
     {
         return array_intersect($parentsMap[$leftId] ?? [], $parentsMap[$rightId] ?? []) !== [];
     }
@@ -725,9 +725,9 @@ class FamilyTreeController extends Controller
     }
 
     /**
-     * @param  array<int, array<int, string|null>>  $parentSubtypeMap
+     * @param  array<string, array<string, string|null>>  $parentSubtypeMap
      */
-    private function parentSubtype(int $parentId, int $childId, array $parentSubtypeMap): ?string
+    private function parentSubtype(string $parentId, string $childId, array $parentSubtypeMap): ?string
     {
         return $parentSubtypeMap[$parentId][$childId] ?? null;
     }
@@ -790,11 +790,11 @@ class FamilyTreeController extends Controller
 
     /**
      * @param  array<int, list<int>>  $lineageParentsMap
-     * @param  array<int, list<int>>  $spousesMap
+     * @param  array<string, list<string>>  $spousesMap
      */
     private function isStepSibling(
-        int $ownerId,
-        int $focusId,
+        string $ownerId,
+        string $focusId,
         array $lineageParentsMap,
         array $spousesMap
     ): bool {
@@ -906,7 +906,7 @@ class FamilyTreeController extends Controller
     /**
      * @return array{0: int, 1: int}|null
      */
-    private function closestCommonAncestorDepths(int $leftId, int $rightId, array $parentsMap): ?array
+    private function closestCommonAncestorDepths(string $leftId, string $rightId, array $parentsMap): ?array
     {
         $leftDepths = $this->ancestorDepthMap($leftId, $parentsMap);
         $rightDepths = $this->ancestorDepthMap($rightId, $parentsMap);
@@ -934,9 +934,9 @@ class FamilyTreeController extends Controller
     }
 
     /**
-     * @return array<int, int>
+     * @return array<string, int>
      */
-    private function ancestorDepthMap(int $personId, array $parentsMap): array
+    private function ancestorDepthMap(string $personId, array $parentsMap): array
     {
         $depths = [$personId => 0];
         $queue = [[$personId, 0]];
@@ -1539,12 +1539,12 @@ class FamilyTreeController extends Controller
 
     /**
      * @param  list<int>  $collapsedIds
-     * @return list<int>
+     * @return list<string>
      */
-    private function toggleCollapsedIds(array $collapsedIds, int $personId): array
+    private function toggleCollapsedIds(array $collapsedIds, string $personId): array
     {
         if (in_array($personId, $collapsedIds, true)) {
-            return array_values(array_filter($collapsedIds, fn (int $id) => $id !== $personId));
+            return array_values(array_filter($collapsedIds, fn (string $id) => $id !== $personId));
         }
 
         $collapsedIds[] = $personId;

@@ -38,7 +38,7 @@
 
             <div class="mt-6 overflow-hidden rounded-xl border border-[#e3e8ee]">
                 <table class="min-w-full divide-y divide-[#e3e8ee] text-sm">
-                    <thead class="bg-[#f7f9fb] {{ config('app.locale_meta.'.app()->getLocale().'.direction', 'ltr') === 'rtl' ? 'text-right' : 'text-left' }} text-[#5f6a74]">
+                    <thead class="bg-[#f7f9fb] {{ config('app.locales.'.app()->getLocale().'.direction', 'ltr') === 'rtl' ? 'text-right' : 'text-left' }} text-[#5f6a74]">
                         <tr>
                             <th class="px-4 py-3 font-medium">{{ __('Member name') }}</th>
                             <th class="px-4 py-3 font-medium">{{ __('Access level') }}</th>
@@ -154,6 +154,95 @@
                         <p class="text-sm text-[#6f7b83]">{{ __('No pending membership requests right now.') }}</p>
                     @endforelse
                 </div>
+            </div>
+        </section>
+
+        {{-- ── Global Tree Settings ──────────────────────────────── --}}
+        <section class="rounded-2xl border border-[#e3e8ee] bg-white p-6 shadow-sm">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-semibold text-[#1f252b]">{{ __('Global Tree') }}</h2>
+                    <p class="max-w-2xl text-sm leading-6 text-[#6f7b83]">
+                        {{ __('When enabled, historical records from this tree are included in the Origynz Global Tree — a community-wide shared view. Living persons (or anyone born within the last 100 years with no death date) are always shown as "Private Person" with no personal details, regardless of this setting.') }}
+                    </p>
+                </div>
+                @if ($tree->global_tree_enabled)
+                    <span class="rounded-[6px] bg-[#dcfce7] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#166534]">
+                        {{ __('Active') }}
+                    </span>
+                @else
+                    <span class="rounded-[6px] bg-[#f3f4f6] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#6b7280]">
+                        {{ __('Inactive') }}
+                    </span>
+                @endif
+            </div>
+
+            <div class="mt-6 rounded-xl border border-[#fde68a] bg-[#fffbeb] px-5 py-4 text-sm leading-6 text-[#78350f]">
+                <strong>{{ __('Data-protection notice:') }}</strong>
+                {{ __('By enabling this feature you confirm that the historical data in this tree was collected lawfully and that you are not knowingly sharing sensitive personal data (health conditions, genetic data, adoptions) about living individuals. Living persons are automatically anonymised. You can disable this toggle at any time; your data will be removed from the Global Tree immediately.') }}
+            </div>
+
+            <div class="mt-6 space-y-4">
+                @if (! $tree->global_tree_enabled)
+                    {{-- Enable form – requires consent checkbox --}}
+                    <form
+                        id="global-tree-enable-form"
+                        method="POST"
+                        action="{{ route('trees.global-tree-settings.update', $tree) }}"
+                        class="space-y-4"
+                    >
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="global_tree_enabled" value="1">
+
+                        <label class="flex cursor-pointer items-start gap-3">
+                            <input
+                                id="global-tree-consent"
+                                type="checkbox"
+                                name="consent"
+                                value="1"
+                                required
+                                class="mt-0.5 h-4 w-4 rounded border-[#cdd7e1] text-[#2563eb] focus:ring-[#93c5fd]"
+                            >
+                            <span class="text-sm leading-6 text-[#334155]">
+                                {{ __('I confirm I have the right to share this data and understand that living persons will be anonymised in the Global Tree.') }}
+                            </span>
+                        </label>
+
+                        @error('consent')
+                            <p class="text-sm text-[#b91c1c]">{{ $message }}</p>
+                        @enderror
+
+                        <button
+                            type="submit"
+                            class="rounded-[6px] bg-[#2563eb] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#1d4ed8]"
+                        >
+                            {{ __('Enable Global Tree for this tree') }}
+                        </button>
+                    </form>
+                @else
+                    {{-- Disable form --}}
+                    <form
+                        method="POST"
+                        action="{{ route('trees.global-tree-settings.update', $tree) }}"
+                    >
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="global_tree_enabled" value="0">
+                        <input type="hidden" name="consent" value="1">
+                        <button
+                            type="submit"
+                            class="rounded-[6px] border border-[#fca5a5] bg-[#fff1f2] px-5 py-2 text-sm font-medium text-[#b91c1c] transition hover:bg-[#fee2e2]"
+                        >
+                            {{ __('Remove this tree from the Global Tree') }}
+                        </button>
+                    </form>
+
+                    <p class="text-sm text-[#6f7b83]">
+                        {{ __('Your tree is currently visible in the') }}
+                        <a href="{{ route('global-tree.index') }}" class="text-[#2563eb] hover:underline">{{ __('Global Tree') }}</a>.
+                    </p>
+                @endif
             </div>
         </section>
 

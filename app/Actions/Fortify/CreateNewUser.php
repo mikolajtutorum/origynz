@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Actions\CreateDefaultFamilyTree;
 use App\Concerns\PasswordValidationRules;
 use App\Models\User;
 use App\Support\Authorization\TreeAccessService;
@@ -24,6 +25,13 @@ class CreateNewUser implements CreatesNewUsers
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => $this->passwordRules(),
+            'terms' => ['required', 'accepted'],
+            'age_confirmation' => ['required', 'accepted'],
+        ], [
+            'terms.required' => __('You must agree to the Terms of Service and Privacy Policy.'),
+            'terms.accepted' => __('You must agree to the Terms of Service and Privacy Policy.'),
+            'age_confirmation.required' => __('You must confirm you are 13 years of age or older.'),
+            'age_confirmation.accepted' => __('You must confirm you are 13 years of age or older.'),
         ])->validate();
 
         [$firstName, $middleName, $lastName] = $this->splitName($input['name']);
@@ -40,6 +48,7 @@ class CreateNewUser implements CreatesNewUsers
 
         app(TreeAccessService::class)->assignDefaultRole($user);
         app(TreeAccessService::class)->syncPendingAccessForUser($user);
+        app(CreateDefaultFamilyTree::class)->execute($user);
 
         return $user;
     }

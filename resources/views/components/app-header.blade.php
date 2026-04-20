@@ -6,14 +6,10 @@
 
 @php
     $currentLocale = app()->getLocale();
-    $direction = config('app.locale_meta.'.$currentLocale.'.direction', 'ltr');
+    $locales = config('app.locales', []);
+    $direction = $locales[$currentLocale]['direction'] ?? 'ltr';
     $isRtl = $direction === 'rtl';
-    $localeLabels = [
-        'en' => ['flag' => '🇬🇧', 'label' => 'EN'],
-        'pl' => ['flag' => '🇵🇱', 'label' => 'PL'],
-        'ar' => ['flag' => '🇸🇦', 'label' => 'AR'],
-    ];
-    $active = $localeLabels[$currentLocale] ?? $localeLabels['en'];
+    $active = $locales[$currentLocale] ?? $locales['en'] ?? ['flag' => '🇬🇧', 'short' => 'EN'];
     $homeBaseHref = $authenticated && auth()->check() ? route('dashboard') : route('home');
     $firstFamilyTree = $authenticated && auth()->check()
         ? auth()->user()->familyTrees()->orderBy('id')->first()
@@ -60,7 +56,7 @@
                 aria-expanded="false"
             >
                 <span>{{ $active['flag'] }}</span>
-                <span class="text-[11px] font-semibold tracking-wide">{{ $active['label'] }}</span>
+                <span class="text-[11px] font-semibold tracking-wide">{{ $active['short'] }}</span>
                 <span class="text-[9px] opacity-70">▾</span>
             </button>
 
@@ -69,11 +65,8 @@
                 class="absolute top-full z-50 mt-1 hidden min-w-[160px] overflow-hidden rounded-lg border border-white/20 bg-[#4a4846] shadow-xl {{ $isRtl ? 'left-0' : 'right-0' }}"
                 role="menu"
             >
-                @foreach ([
-                    ['locale' => 'en', 'flag' => '🇬🇧', 'label' => 'English'],
-                    ['locale' => 'pl', 'flag' => '🇵🇱', 'label' => 'Polski'],
-                    ['locale' => 'ar', 'flag' => '🇸🇦', 'label' => 'العربية'],
-                ] as $option)
+                @foreach ($locales as $code => $meta)
+                    @php $option = ['locale' => $code, 'flag' => $meta['flag'], 'label' => $meta['label']]; @endphp
                     <form method="POST" action="{{ route('locale.store') }}">
                         @csrf
                         <input type="hidden" name="locale" value="{{ $option['locale'] }}">
@@ -191,7 +184,11 @@
                 <span class="workspace-nav-link {{ $activeNav === 'family-tree' ? 'is-active' : '' }} {{ $activeNav !== 'family-tree' ? 'cursor-default' : '' }}">{{ __('Family tree') }}</span>
             @endif
 
-            <span class="workspace-nav-link cursor-default">{{ __('Discoveries') }}</span>
+            @if ($authenticated && auth()->check())
+                <a href="{{ route('global-tree.index') }}" class="workspace-nav-link {{ $activeNav === 'global-tree' ? 'is-active' : '' }}">{{ __('Global Tree') }}</a>
+            @else
+                <span class="workspace-nav-link cursor-default">{{ __('Global Tree') }}</span>
+            @endif
             @if ($authenticated && auth()->check())
                 <a href="{{ route('media.index') }}" class="workspace-nav-link {{ $activeNav === 'photos' ? 'is-active' : '' }}">{{ __('Photos') }}</a>
             @else
@@ -202,6 +199,32 @@
 
             @if ($authenticated && auth()->check())
                 <a href="{{ route('profile.edit') }}" class="workspace-nav-link {{ $activeNav === 'settings' ? 'is-active' : '' }}">{{ __('Settings') }}</a>
+            @endif
+
+            @if ($authenticated && auth()->check() && auth()->user()->isSuperAdmin())
+                <div class="relative" id="admin-nav-switcher">
+                    <button
+                        type="button"
+                        id="admin-nav-btn"
+                        class="workspace-nav-link flex items-center gap-2 rounded-[6px] !text-[#dc2626] font-semibold {{ $activeNav === 'admin' ? 'is-active' : '' }}"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                    >
+                        <span>{{ __('Admin') }}</span>
+                        <span class="text-[9px] opacity-70">▾</span>
+                    </button>
+                    <div
+                        id="admin-nav-dropdown"
+                        class="absolute top-full z-50 mt-1 hidden min-w-[220px] overflow-hidden rounded-[6px] border border-[#dde1e6] bg-white py-1 shadow-xl {{ $isRtl ? 'right-0' : 'left-0' }}"
+                        role="menu"
+                    >
+                        <a href="{{ route('admin.dashboard') }}" role="menuitem" class="block px-4 py-2.5 text-sm text-[#4f5963] transition hover:bg-[#f3f7fb] hover:text-[#2563eb]">{{ __('Dashboard') }}</a>
+                        <a href="{{ route('admin.users.index') }}" role="menuitem" class="block px-4 py-2.5 text-sm text-[#4f5963] transition hover:bg-[#f3f7fb] hover:text-[#2563eb]">{{ __('Users') }}</a>
+                        <a href="{{ route('admin.trees.index') }}" role="menuitem" class="block px-4 py-2.5 text-sm text-[#4f5963] transition hover:bg-[#f3f7fb] hover:text-[#2563eb]">{{ __('Trees') }}</a>
+                        <a href="{{ route('admin.global-tree.index') }}" role="menuitem" class="block px-4 py-2.5 text-sm text-[#4f5963] transition hover:bg-[#f3f7fb] hover:text-[#2563eb]">{{ __('Global Tree') }}</a>
+                        <a href="{{ route('admin.activity.index') }}" role="menuitem" class="block px-4 py-2.5 text-sm text-[#4f5963] transition hover:bg-[#f3f7fb] hover:text-[#2563eb]">{{ __('Activity log') }}</a>
+                    </div>
+                </div>
             @endif
         </nav>
 
@@ -282,5 +305,6 @@
     setupClickDropdown('locale-switcher', 'locale-btn', 'locale-dropdown');
     setupHoverDropdown('home-nav-switcher', 'home-nav-btn', 'home-nav-dropdown');
     setupHoverDropdown('family-tree-nav-switcher', 'family-tree-nav-btn', 'family-tree-nav-dropdown');
+    setupHoverDropdown('admin-nav-switcher', 'admin-nav-btn', 'admin-nav-dropdown');
 })();
 </script>

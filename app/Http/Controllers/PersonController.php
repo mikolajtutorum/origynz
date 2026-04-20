@@ -126,7 +126,7 @@ class PersonController extends Controller
             'return_to' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $anchorPerson = $tree->people()->findOrFail((int) $data['anchor_person_id']);
+        $anchorPerson = $tree->people()->findOrFail($data['anchor_person_id']);
         $role = $this->resolveRelationRole($data);
         $relationshipSubtype = $this->resolveRelationshipSubtype($role, $data['relationship_subtype'] ?? null);
 
@@ -314,8 +314,8 @@ class PersonController extends Controller
     {
         $relIds = [];
         foreach ($request->keys() as $key) {
-            if (preg_match('/^_rel_(\d+)_id$/', $key, $m)) {
-                $relIds[] = (int) $m[1];
+            if (preg_match('/^_rel_([0-9a-f-]+)_id$/', $key, $m)) {
+                $relIds[] = $m[1];
             }
         }
 

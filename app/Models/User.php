@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -16,12 +17,22 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'first_name', 'middle_name', 'last_name', 'birth_date', 'country_of_residence', 'preferred_locale', 'email', 'password'])]
+#[Fillable(['name', 'first_name', 'middle_name', 'last_name', 'birth_date', 'country_of_residence', 'preferred_locale', 'ccpa_do_not_sell', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable, TwoFactorAuthenticatable;
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        static::deleting(function (User $user) {
+            \Spatie\Activitylog\Models\Activity::where('causer_id', $user->id)
+                ->where('causer_type', self::class)
+                ->delete();
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -88,5 +99,21 @@ class User extends Authenticatable
     public function socialAccounts(): HasMany
     {
         return $this->hasMany(SocialAccount::class);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        $tables   = config('permission.table_names');
+        $columns  = config('permission.column_names');
+        $teamKey  = $columns['team_foreign_key'] ?? 'family_tree_id';
+        $morphKey = $columns['model_morph_key'] ?? 'model_id';
+
+        return \Illuminate\Support\Facades\DB::table($tables['model_has_roles'].' as model_roles')
+            ->join($tables['roles'].' as roles', 'roles.id', '=', 'model_roles.role_id')
+            ->where('model_roles.'.$teamKey, \App\Support\Authorization\TreeAccessService::SITE_TEAM_ID)
+            ->where('model_roles.model_type', self::class)
+            ->where('model_roles.'.$morphKey, $this->getKey())
+            ->where('roles.name', \App\Enums\SiteRole::SuperAdmin->value)
+            ->exists();
     }
 }

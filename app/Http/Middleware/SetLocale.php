@@ -10,9 +10,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SetLocale
 {
-    private const SUPPORTED = ['en', 'pl', 'ar'];
-    private const DEFAULT    = 'en';
-
     public function handle(Request $request, Closure $next): Response
     {
         $locale = $this->resolveLocale($request);
@@ -22,11 +19,16 @@ class SetLocale
         return $next($request);
     }
 
+    private function supported(): array
+    {
+        return array_keys(config('app.locales', ['en' => []]));
+    }
+
     private function resolveLocale(Request $request): string
     {
         // 1. User explicitly chose a locale (stored in session)
         $session = session('locale');
-        if ($session && in_array($session, self::SUPPORTED, true)) {
+        if ($session && in_array($session, $this->supported(), true)) {
             return $session;
         }
 
@@ -42,7 +44,7 @@ class SetLocale
             return $fromIp;
         }
 
-        return self::DEFAULT;
+        return config('app.locale', 'en');
     }
 
     private function detectFromBrowser(Request $request): ?string
@@ -72,14 +74,10 @@ class SetLocale
 
     private function mapBrowserTag(string $tag): ?string
     {
-        if (str_starts_with($tag, 'pl')) {
-            return 'pl';
-        }
-        if (str_starts_with($tag, 'ar')) {
-            return 'ar';
-        }
-        if (str_starts_with($tag, 'en')) {
-            return 'en';
+        foreach ($this->supported() as $locale) {
+            if (str_starts_with($tag, $locale)) {
+                return $locale;
+            }
         }
 
         return null;
@@ -97,12 +95,15 @@ class SetLocale
                     'fields' => 'countryCode',
                 ]);
 
-                return match ($response->json('countryCode')) {
-                    'PL'                                                => 'pl',
-                    'SA', 'AE', 'EG', 'IQ', 'JO', 'KW', 'LB', 'MA',
-                    'QA', 'SY', 'TN', 'YE', 'DZ', 'LY', 'SD', 'OM'  => 'ar',
-                    default                                             => 'en',
-                };
+                $countryCode = $response->json('countryCode');
+
+                foreach (config('app.locales', []) as $locale => $meta) {
+                    if (in_array($countryCode, $meta['countries'] ?? [], true)) {
+                        return $locale;
+                    }
+                }
+
+                return config('app.locale', 'en');
             } catch (\Throwable) {
                 return null;
             }

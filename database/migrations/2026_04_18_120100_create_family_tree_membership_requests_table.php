@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('family_tree_membership_requests', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('family_tree_id')->constrained()->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('family_tree_id')->constrained()->cascadeOnDelete();
             $table->string('requester_name');
             $table->string('requester_email');
             $table->text('note')->nullable();
             $table->enum('status', ['pending', 'approved', 'declined'])->default('pending');
-            $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('reviewed_at')->nullable();
             $table->timestamps();
 

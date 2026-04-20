@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sources', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('family_tree_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('family_tree_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('created_by')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->string('author')->nullable();
             $table->string('publication_facts')->nullable();

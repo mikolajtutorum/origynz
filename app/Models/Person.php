@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\RecordsActivity;
 use Database\Factories\PersonFactory;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $cause_of_death
  * @property string|null $burial_place
  * @property bool $is_living
+ * @property bool $exclude_from_global_tree
  * @property string|null $headline
  * @property string|null $notes
  * @property string|null $physical_description
@@ -49,7 +51,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Person extends Model
 {
     /** @use HasFactory<PersonFactory> */
-    use HasFactory, RecordsActivity;
+    use HasFactory, HasUuids, RecordsActivity;
 
     protected $fillable = [
         'family_tree_id',
@@ -72,6 +74,7 @@ class Person extends Model
         'cause_of_death',
         'burial_place',
         'is_living',
+        'exclude_from_global_tree',
         'headline',
         'notes',
         'physical_description',
@@ -86,6 +89,7 @@ class Person extends Model
             'birth_date' => 'date',
             'death_date' => 'date',
             'is_living' => 'bool',
+            'exclude_from_global_tree' => 'bool',
         ];
     }
 

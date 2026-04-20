@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('family_trees', function (Blueprint $table) {
-            $table->foreignId('owner_person_id')
+            $table->foreignUuid('owner_person_id')
                 ->nullable()
                 ->after('user_id')
                 ->constrained('people')

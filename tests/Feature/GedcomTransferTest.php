@@ -71,7 +71,7 @@ class GedcomTransferTest extends TestCase
             'quality' => 3,
         ]);
 
-        $tree->mediaItems()->create([
+        $mediaItem = $tree->mediaItems()->create([
             'person_id' => $parent->id,
             'uploaded_by' => $user->id,
             'title' => 'Portrait',
@@ -90,7 +90,7 @@ class GedcomTransferTest extends TestCase
         $response->assertSeeText('1 NAME Maria /Rivera/', false);
         $response->assertSeeText('1 CHIL @I'.$child->id.'@', false);
         $response->assertSeeText('0 @S'.$source->id.'@ SOUR', false);
-        $response->assertSeeText('0 @O1@ OBJE', false);
+        $response->assertSeeText('0 @O'.$mediaItem->id.'@ OBJE', false);
     }
 
     public function test_export_includes_parent_relationship_qualifiers(): void

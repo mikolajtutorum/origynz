@@ -34,7 +34,7 @@ class UserFactory extends Factory
             'last_name' => $lastName,
             'birth_date' => null,
             'country_of_residence' => null,
-            'preferred_locale' => 'en',
+            'preferred_locale' => config('app.locale', 'en'),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),

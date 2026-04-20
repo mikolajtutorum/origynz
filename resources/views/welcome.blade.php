@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 @php
-    $direction = config('app.locale_meta.'.app()->getLocale().'.direction', 'ltr');
+    $direction = config('app.locales.'.app()->getLocale().'.direction', 'ltr');
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ $direction }}" class="h-full bg-[#efefef]">
     <head>

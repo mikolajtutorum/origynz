@@ -9,6 +9,7 @@ use App\Enums\TreePermission;
 use App\Support\Authorization\TreeAccessService;
 use Database\Factories\FamilyTreeFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +34,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $gedcom_file_label
  * @property string|null $gedcom_project_guid
  * @property string|null $gedcom_site_id
+ * @property bool $global_tree_enabled
  * @property bool $show_birthdays_in_events
  * @property bool $show_wedding_anniversaries_in_events
  * @property bool $show_death_anniversaries_in_events
@@ -43,7 +45,7 @@ use Illuminate\Support\Facades\DB;
 class FamilyTree extends Model
 {
     /** @use HasFactory<FamilyTreeFactory> */
-    use HasFactory, RecordsActivity;
+    use HasFactory, HasUuids, RecordsActivity;
 
     protected $fillable = [
         'user_id',
@@ -53,6 +55,7 @@ class FamilyTree extends Model
         'description',
         'home_region',
         'privacy',
+        'global_tree_enabled',
         'show_birthdays_in_events',
         'show_wedding_anniversaries_in_events',
         'show_death_anniversaries_in_events',
@@ -84,6 +87,7 @@ class FamilyTree extends Model
     protected function casts(): array
     {
         return [
+            'global_tree_enabled' => 'bool',
             'show_birthdays_in_events' => 'bool',
             'show_wedding_anniversaries_in_events' => 'bool',
             'show_death_anniversaries_in_events' => 'bool',
@@ -271,7 +275,7 @@ class FamilyTree extends Model
 
         return DB::table($tables['model_has_roles'].' as model_roles')
             ->join($tables['roles'].' as roles', 'roles.id', '=', 'model_roles.role_id')
-            ->where('model_roles.'.$teamKey, 0)
+            ->where('model_roles.'.$teamKey, \App\Support\Authorization\TreeAccessService::SITE_TEAM_ID)
             ->where('model_roles.model_type', User::class)
             ->where('model_roles.'.$morphKey, $user->getKey())
             ->whereIn('roles.name', $roles)

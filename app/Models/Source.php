@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Concerns\RecordsActivity;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Source extends Model
 {
-    use RecordsActivity;
+    use HasUuids, RecordsActivity;
 
     protected $fillable = [
         'family_tree_id',

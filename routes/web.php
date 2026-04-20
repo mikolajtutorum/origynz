@@ -1,15 +1,20 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DSARController;
 use App\Http\Controllers\FamilyEventController;
 use App\Http\Controllers\FamilyEventSettingsController;
 use App\Http\Controllers\FamilyStatisticsController;
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\GlobalTreeController;
+use App\Http\Controllers\GlobalTreeSettingsController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\FamilyTreeController;
 use App\Http\Controllers\GedcomController;
 use App\Http\Controllers\MediaItemController;
 use App\Http\Controllers\PersonController;
+use App\Http\Controllers\PersonGlobalExclusionController;
 use App\Http\Controllers\PersonRelationshipController;
 use App\Http\Controllers\SourceController;
 use App\Http\Controllers\SiteController;
@@ -25,11 +30,25 @@ Route::get('/', function () {
 })->name('home');
 
 Route::post('/locale', [LocaleController::class, 'store'])->name('locale.store');
+
+// Legal pages — public, no auth required
+Route::get('/privacy-policy', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/terms-of-service', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/data-processing-agreement', [LegalController::class, 'dpa'])->name('legal.dpa');
+Route::get('/ccpa-opt-out', [LegalController::class, 'ccpa'])->name('legal.ccpa');
+Route::post('/ccpa-opt-out', [LegalController::class, 'ccpaOptOut'])->name('legal.ccpa.store')->middleware('auth');
 Route::get('/auth/{provider}/redirect', [SocialiteController::class, 'redirect'])->name('auth.social.redirect');
 Route::get('/auth/{provider}/callback', [SocialiteController::class, 'callback'])->name('auth.social.callback');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+    Route::get('settings/data-export', [DSARController::class, 'index'])->name('settings.data-export');
+    Route::post('settings/data-export', [DSARController::class, 'export'])->name('settings.data-export.store');
+    Route::get('global-tree', [GlobalTreeController::class, 'index'])->name('global-tree.index');
+    Route::get('global-tree/pedigree', [GlobalTreeController::class, 'pedigree'])->name('global-tree.pedigree');
+    Route::get('global-tree/pedigree/person/{person}', [GlobalTreeController::class, 'pedigreePerson'])->name('global-tree.pedigree.person');
+    Route::patch('trees/{tree}/global-tree-settings', [GlobalTreeSettingsController::class, 'update'])->name('trees.global-tree-settings.update');
+    Route::patch('people/{person}/global-tree-exclusion', [PersonGlobalExclusionController::class, 'update'])->name('people.global-tree-exclusion.update');
     Route::get('family-events', [FamilyEventController::class, 'index'])->name('family-events.index');
     Route::get('family-statistics', FamilyStatisticsController::class)->name('family-statistics.index');
     Route::get('media-library', [MediaItemController::class, 'globalIndex'])->name('media.index');

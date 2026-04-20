@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('person_relationships', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('family_tree_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('person_id')->constrained('people')->cascadeOnDelete();
-            $table->foreignId('related_person_id')->constrained('people')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('family_tree_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('person_id')->constrained('people')->cascadeOnDelete();
+            $table->foreignUuid('related_person_id')->constrained('people')->cascadeOnDelete();
             $table->string('type', 20);
             $table->timestamps();
 

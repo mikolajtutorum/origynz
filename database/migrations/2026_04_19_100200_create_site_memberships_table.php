@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('site_memberships', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('site_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('invited_by')->constrained('users')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('site_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('invited_by')->constrained('users')->cascadeOnDelete();
             $table->enum('trees_access', ['all', 'specific'])->default('all');
             $table->enum('status', ['pending', 'accepted', 'revoked'])->default('pending');
             $table->timestamp('accepted_at')->nullable();

@@ -41,7 +41,7 @@ class SourceController extends Controller
         ]);
 
         /** @var Person $person */
-        $person = $tree->people()->findOrFail((int) $data['person_id']);
+        $person = $tree->people()->findOrFail($data['person_id']);
 
         $source = $tree->sources()->create([
             'created_by' => $request->user()->id,

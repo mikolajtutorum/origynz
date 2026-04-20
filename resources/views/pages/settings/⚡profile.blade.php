@@ -16,7 +16,7 @@ new #[Title('Profile settings')] class extends Component {
     public string $last_name = '';
     public ?string $birth_date = '';
     public ?string $country_of_residence = '';
-    public string $preferred_locale = 'en';
+    public string $preferred_locale = '';
     public string $email = '';
 
     /**
@@ -116,9 +116,9 @@ new #[Title('Profile settings')] class extends Component {
             <div class="grid gap-4 md:grid-cols-2">
                 <flux:input wire:model="country_of_residence" :label="__('Country of residence')" type="text" autocomplete="country-name" />
                 <flux:select wire:model="preferred_locale" :label="__('Preferred locale')">
-                    <option value="en">{{ __('English (UK)') }}</option>
-                    <option value="pl">{{ __('Polski') }}</option>
-                    <option value="ar">{{ __('Arabic') }}</option>
+                    @foreach (config('app.locales', []) as $code => $meta)
+                        <option value="{{ $code }}">{{ $meta['native'] }}</option>
+                    @endforeach
                 </flux:select>
             </div>
 

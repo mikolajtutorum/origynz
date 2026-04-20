@@ -265,9 +265,9 @@ class GedcomExporter
     }
 
     /**
-     * @return array{0:int,1:int}
+     * @return array{0:string,1:string}
      */
-    private function assignPartners(Collection $people, int $left, int $right): array
+    private function assignPartners(Collection $people, string $left, string $right): array
     {
         if (($people[$left]->sex ?? 'unknown') === 'female' && ($people[$right]->sex ?? 'unknown') !== 'female') {
             return [$right, $left];
@@ -343,7 +343,7 @@ class GedcomExporter
         return str_replace(["\r", "\n"], ' ', trim($value));
     }
 
-    private function pairKey(int $left, int $right): string
+    private function pairKey(string $left, string $right): string
     {
         $ids = [$left, $right];
         sort($ids);

@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('family_tree_invitations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('family_tree_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('invited_by')->constrained('users')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('family_tree_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('invited_by')->constrained('users')->cascadeOnDelete();
             $table->string('email');
             $table->enum('status', ['pending', 'accepted', 'revoked'])->default('pending');
             $table->timestamps();

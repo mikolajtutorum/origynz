@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PersonSourceCitation extends Model
 {
+    use HasUuids;
     protected $fillable = [
         'person_id',
         'source_id',

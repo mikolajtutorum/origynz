@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
 
             $isSuperAdmin = DB::table($tables['model_has_roles'].' as model_roles')
                 ->join($tables['roles'].' as roles', 'roles.id', '=', 'model_roles.role_id')
-                ->where('model_roles.'.$teamKey, 0)
+                ->where('model_roles.'.$teamKey, \App\Support\Authorization\TreeAccessService::SITE_TEAM_ID)
                 ->where('model_roles.model_type', User::class)
                 ->where('model_roles.'.$morphKey, $user->getKey())
                 ->where('roles.name', SiteRole::SuperAdmin->value)
