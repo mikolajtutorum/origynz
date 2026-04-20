@@ -104,7 +104,7 @@ return [
             'flag'         => '🇬🇧',
             'short'        => 'EN',
             'label'        => 'English',
-            'native'       => 'English (UK)',
+            'native'       => 'English',
             'direction'    => 'ltr',
             'countries'    => [], // fallback — any country not matched by another locale
         ],

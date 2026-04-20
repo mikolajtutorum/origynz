@@ -1,2 +1,13 @@
 User-agent: *
-Disallow:
+Disallow: /dashboard
+Disallow: /trees
+Disallow: /people
+Disallow: /admin
+Disallow: /settings
+Disallow: /global-tree
+Disallow: /media
+Disallow: /gedcom
+Disallow: /family-events
+Disallow: /family-statistics
+
+Sitemap: /sitemap.xml

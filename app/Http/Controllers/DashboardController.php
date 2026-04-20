@@ -25,6 +25,7 @@ class DashboardController extends Controller
         return view('dashboard', [
             'trees' => $trees,
             'recentPeople' => $recentPeople,
+            'onboarding' => $request->user()->onboarding(),
             'stats' => [
                 'trees' => $trees->count(),
                 'profiles' => $trees->sum('people_count'),

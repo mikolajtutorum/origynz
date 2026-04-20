@@ -21,7 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'super.admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'honeypot' => \Spatie\Honeypot\ProtectAgainstSpam::class,
         ]);
+        $middleware->appendToGroup('web', \Spatie\Honeypot\ProtectAgainstSpam::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->report(function (Throwable $e): void {

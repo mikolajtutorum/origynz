@@ -7,6 +7,7 @@
 
         <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-6">
             @csrf
+            @honeypot
 
             <!-- Email Address -->
             <flux:input

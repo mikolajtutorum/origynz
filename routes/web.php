@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\DSARController;
 use App\Http\Controllers\FamilyEventController;
 use App\Http\Controllers\FamilyEventSettingsController;
@@ -30,6 +31,8 @@ Route::get('/', function () {
 })->name('home');
 
 Route::post('/locale', [LocaleController::class, 'store'])->name('locale.store');
+
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // Legal pages — public, no auth required
 Route::get('/privacy-policy', [LegalController::class, 'privacy'])->name('legal.privacy');

@@ -36,6 +36,40 @@
             </div>
         </section>
 
+        @if ($onboarding->inProgress())
+            <section class="overflow-hidden rounded-2xl border border-[#bfdbfe] bg-[#eff6ff] px-8 py-7 shadow-sm">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.35em] text-[#2563eb]">{{ __('Getting started') }}</p>
+                        <h2 class="mt-1 text-xl font-semibold text-[#1f252b]">{{ __('Complete your setup') }}</h2>
+                        <p class="mt-1 text-sm text-[#4f5963]">{{ __('Follow these steps to get your family workspace ready.') }}</p>
+                    </div>
+                    <span class="shrink-0 rounded-full bg-[#2563eb] px-3 py-1 text-xs font-semibold text-white">
+                        {{ $onboarding->steps()->filter->complete()->count() }} / {{ $onboarding->steps()->count() }}
+                    </span>
+                </div>
+                <ol class="mt-6 space-y-3">
+                    @foreach ($onboarding->steps() as $step)
+                        <li class="flex items-center gap-4 rounded-xl border px-5 py-4 {{ $step->complete() ? 'border-[#bbf7d0] bg-[#f0fdf4]' : 'border-[#c7d4df] bg-white' }}">
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full {{ $step->complete() ? 'bg-[#22c55e] text-white' : 'border-2 border-[#cbd5e1] bg-white' }}">
+                                @if ($step->complete())
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                @endif
+                            </span>
+                            <span class="flex-1 text-sm font-medium {{ $step->complete() ? 'text-[#15803d] line-through' : 'text-[#1f252b]' }}">
+                                {{ $step->title }}
+                            </span>
+                            @if ($step->incomplete())
+                                <a href="{{ $step->link }}" class="shrink-0 rounded-[6px] border border-[#93c5fd] bg-[#eff6ff] px-3 py-1.5 text-xs font-medium text-[#2563eb] transition hover:bg-[#dbeafe]">
+                                    {{ $step->cta_text }}
+                                </a>
+                            @endif
+                        </li>
+                    @endforeach
+                </ol>
+            </section>
+        @endif
+
         <section class="grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
             <div class="space-y-4 rounded-2xl border border-[#e3e8ee] bg-white p-6 shadow-sm">
                 <div class="flex items-center justify-between gap-4">

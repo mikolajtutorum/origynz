@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Onboard\Facades\Onboard;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +28,20 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureOnboarding();
+    }
+
+    protected function configureOnboarding(): void
+    {
+        Onboard::addStep(__('Create your first family tree'))
+            ->link('/trees/manage')
+            ->cta(__('Go to tree management'))
+            ->completeIf(fn (User $user): bool => $user->familyTrees()->exists());
+
+        Onboard::addStep(__('Add your first family member'))
+            ->link('/trees/my')
+            ->cta(__('Open my tree'))
+            ->completeIf(fn (User $user): bool => $user->people()->exists());
     }
 
     /**
