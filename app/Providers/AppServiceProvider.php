@@ -5,9 +5,12 @@ namespace App\Providers;
 use App\Enums\SiteRole;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Onboard\Facades\Onboard;
@@ -29,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureOnboarding();
+        $this->configureRateLimiting();
     }
 
     protected function configureOnboarding(): void
@@ -42,6 +46,16 @@ class AppServiceProvider extends ServiceProvider
             ->link('/trees/my')
             ->cta(__('Open my tree'))
             ->completeIf(fn (User $user): bool => $user->people()->exists());
+    }
+
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('api', function (Request $request) {
+            $limit = (int) config('integrations.api.rate_limit', 60);
+
+            return Limit::perMinute($limit)
+                ->by($request->user()?->id ?: $request->ip());
+        });
     }
 
     /**

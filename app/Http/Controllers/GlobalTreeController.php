@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\FamilyTree;
 use App\Models\Person;
+use App\Models\ProfileWatch;
 use App\Services\GlobalTreePedigreeService;
 use App\Services\GlobalTreePrivacyService;
+use App\Services\SuggestedConnectionService;
+use App\Services\TrustScoreService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -14,6 +17,8 @@ class GlobalTreeController extends Controller
     public function __construct(
         private readonly GlobalTreePrivacyService $privacy,
         private readonly GlobalTreePedigreeService $pedigree,
+        private readonly TrustScoreService $trustScore,
+        private readonly SuggestedConnectionService $suggestions,
     ) {}
 
     public function index(Request $request): View
@@ -53,17 +58,34 @@ class GlobalTreeController extends Controller
 
         $totalProfiles = $branches->sum('visible_people_count');
 
-        $displayData = $people->getCollection()->map(
-            fn (Person $p) => $this->privacy->buildDisplayData($p, $ownedTreeIds)
-        );
+        $user = $request->user();
+
+        // IDs of people the current user is watching
+        $watchedIds = ProfileWatch::where('user_id', $user->id)
+            ->pluck('person_id')
+            ->all();
+
+        $displayData = $people->getCollection()->map(function (Person $p) use ($ownedTreeIds): array {
+            $data = $this->privacy->buildDisplayData($p, $ownedTreeIds);
+            if (! $data['is_private']) {
+                $data['trust_score']  = $p->trust_score;
+                $data['trust_label']  = $this->trustScore->label($p->trust_score);
+                $data['trust_colour'] = $this->trustScore->colourClass($p->trust_score);
+            }
+            return $data;
+        });
+
+        $suggestedConnections = $this->suggestions->forUser($user);
 
         return view('global-tree.index', [
-            'people'        => $people,
-            'displayData'   => $displayData,
-            'branches'      => $branches,
-            'totalProfiles' => $totalProfiles,
-            'search'        => $search,
-            'treeFilter'    => $treeFilter,
+            'people'               => $people,
+            'displayData'          => $displayData,
+            'branches'             => $branches,
+            'totalProfiles'        => $totalProfiles,
+            'search'               => $search,
+            'treeFilter'           => $treeFilter,
+            'watchedIds'           => $watchedIds,
+            'suggestedConnections' => $suggestedConnections,
         ]);
     }
 
@@ -73,7 +95,23 @@ class GlobalTreeController extends Controller
         $ownedTreeIds = FamilyTree::where('user_id', $user->id)->pluck('id')->all();
 
         $hasEnabledTree = $this->pedigree->hasAnyEnabledTree($user);
-        $rootPerson     = $hasEnabledTree ? $this->pedigree->findRootPerson($user) : null;
+        $rootPerson     = null;
+
+        if ($hasEnabledTree) {
+            $focusId = $request->query('focus');
+            if ($focusId) {
+                $candidate = Person::find($focusId);
+                if ($candidate
+                    && $candidate->familyTree?->global_tree_enabled
+                    && ! $candidate->exclude_from_global_tree
+                ) {
+                    $rootPerson = $candidate;
+                }
+            }
+            if (! $rootPerson) {
+                $rootPerson = $this->pedigree->findRootPerson($user);
+            }
+        }
 
         $chartNodes  = [];
         $chartLines  = [];
@@ -95,6 +133,34 @@ class GlobalTreeController extends Controller
             'generations'    => $generations,
             'sidebarData'    => $sidebarData,
         ]);
+    }
+
+    public function pedigreeSearch(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $q = trim((string) $request->get('q', ''));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $results = Person::query()
+            ->whereHas('familyTree', fn ($fq) => $fq->where('global_tree_enabled', true))
+            ->where('exclude_from_global_tree', false)
+            ->where(function ($query) use ($q): void {
+                $query->where('given_name', 'like', "%{$q}%")
+                    ->orWhere('surname', 'like', "%{$q}%");
+            })
+            ->with('familyTree:id,name')
+            ->limit(12)
+            ->get()
+            ->map(fn (Person $p) => [
+                'id'        => $p->id,
+                'name'      => $p->display_name,
+                'life_span' => $p->life_span,
+                'tree'      => $p->familyTree?->name,
+            ]);
+
+        return response()->json($results);
     }
 
     public function pedigreePerson(Request $request, Person $person): \Illuminate\Http\JsonResponse

@@ -217,6 +217,7 @@ if (workspace) {
 
     const exactIso = (month, day, year) => {
         if (!month || !year) { return ''; }
+        if (!/^\d+$/.test(year.trim())) { return ''; }
         const d = String(day).padStart(2, '0');
         if (d === '00') { return ''; }
         return `${year}-${String(MONTH_NUMS[month] ?? 1).padStart(2, '0')}-${d}`;

@@ -33,6 +33,16 @@
                    class="rounded-t-[6px] px-4 py-2 text-sm font-medium text-[#6f7b83] transition hover:text-[#1f252b]">
                     {{ __('Pedigree Chart') }}
                 </a>
+                <a href="{{ route('global-tree.relationship-calculator') }}"
+                   class="rounded-t-[6px] px-4 py-2 text-sm font-medium text-[#6f7b83] transition hover:text-[#1f252b]">
+                    {{ __('Relationship Calculator') }}
+                </a>
+                @if (auth()->user()?->hasAnyRole(['super admin', 'admin', 'curator']))
+                    <a href="{{ route('global-tree.merge.index') }}"
+                       class="rounded-t-[6px] px-4 py-2 text-sm font-medium text-[#6f7b83] transition hover:text-[#1f252b]">
+                        {{ __('Merge Candidates') }}
+                    </a>
+                @endif
             </div>
         </section>
 
@@ -79,6 +89,50 @@
                         {{ __('Manage my trees') }}
                     </a>
                 </section>
+
+                {{-- Quick links --}}
+                <section class="rounded-2xl border border-[#e3e8ee] bg-white p-5 shadow-sm">
+                    <h2 class="text-sm font-semibold uppercase tracking-[0.28em] text-[#6f7b83]">{{ __('Tools') }}</h2>
+                    <div class="mt-3 space-y-1">
+                        <a href="{{ route('global-tree.relationship-calculator') }}"
+                           class="flex items-center gap-2 rounded-[6px] px-3 py-2 text-sm text-[#334155] transition hover:bg-[#f3f7fb]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#9daab4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            {{ __('Relationship Calculator') }}
+                        </a>
+                        <a href="{{ route('people.watch-list') }}"
+                           class="flex items-center gap-2 rounded-[6px] px-3 py-2 text-sm text-[#334155] transition hover:bg-[#f3f7fb]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#9daab4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            {{ __('My Watch List') }}
+                        </a>
+                        <a href="{{ route('people.claims.index') }}"
+                           class="flex items-center gap-2 rounded-[6px] px-3 py-2 text-sm text-[#334155] transition hover:bg-[#f3f7fb]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#9daab4]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            {{ __('Profile Claims') }}
+                        </a>
+                    </div>
+                </section>
+
+                {{-- Suggested connections --}}
+                @if (isset($suggestedConnections) && $suggestedConnections->isNotEmpty())
+                    <section class="rounded-2xl border border-[#fde68a] bg-[#fffbeb] p-5 shadow-sm">
+                        <h2 class="text-sm font-semibold uppercase tracking-[0.28em] text-[#92400e]">{{ __('Suggested Connections') }}</h2>
+                        <p class="mt-1 text-xs text-[#78350f]">{{ __('These profiles in your trees may match people in other branches.') }}</p>
+                        <div class="mt-3 space-y-2">
+                            @foreach ($suggestedConnections->take(3) as $sc)
+                                <a href="{{ route('global-tree.merge.review', $sc) }}"
+                                   class="block rounded-lg border border-[#fde68a] bg-white px-3 py-2 text-xs hover:border-[#f59e0b]">
+                                    <p class="font-medium text-[#1f252b]">{{ $sc->personA?->display_name }} ≈ {{ $sc->personB?->display_name }}</p>
+                                    <p class="mt-0.5 text-[#78350f]">{{ $sc->similarity_score }}% {{ __('match') }}</p>
+                                </a>
+                            @endforeach
+                        </div>
+                        @if ($suggestedConnections->count() > 3)
+                            <a href="{{ route('global-tree.merge.index') }}" class="mt-3 block text-center text-xs text-[#2563eb] hover:underline">
+                                {{ __('View all :n', ['n' => $suggestedConnections->count()]) }}
+                            </a>
+                        @endif
+                    </section>
+                @endif
             </aside>
 
             {{-- Main: search + people list --}}
@@ -114,7 +168,8 @@
                     @else
                         <div class="divide-y divide-[#f0f4f8]">
                             @foreach ($displayData as $i => $data)
-                                <div class="flex items-center gap-4 px-6 py-4 {{ $data['is_private'] ? 'opacity-60' : '' }}">
+                                <div class="flex items-center gap-4 px-6 py-4 {{ $data['is_private'] ? 'opacity-60' : '' }}"
+                                     x-data="{ watching: {{ isset($watchedIds) && in_array($data['id'], $watchedIds) ? 'true' : 'false' }} }">
 
                                     {{-- Avatar placeholder --}}
                                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
@@ -133,6 +188,11 @@
                                             @if ($data['is_private'])
                                                 <span class="rounded-[4px] bg-[#f3f4f6] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6b7280]">
                                                     {{ __('Private') }}
+                                                </span>
+                                            @endif
+                                            @if (! $data['is_private'] && isset($data['trust_score']))
+                                                <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold {{ $data['trust_colour'] }}">
+                                                    {{ $data['trust_label'] }}
                                                 </span>
                                             @endif
                                         </div>
@@ -156,6 +216,25 @@
                                     <div class="shrink-0 text-right text-xs text-[#9daab4]">
                                         {{ $data['family_tree'] }}
                                     </div>
+
+                                    {{-- Watch toggle (non-private only) --}}
+                                    @if (! $data['is_private'])
+                                        <button
+                                            x-on:click.prevent="
+                                                fetch('{{ route('people.watch.toggle', $data['id']) }}', {
+                                                    method: 'POST',
+                                                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
+                                                }).then(r => r.json()).then(d => { watching = d.watching; })
+                                            "
+                                            :title="watching ? '{{ __('Unwatch') }}' : '{{ __('Watch') }}'"
+                                            class="shrink-0 rounded-full p-1.5 transition hover:bg-[#f0f4f8]"
+                                            :class="watching ? 'text-[#2563eb]' : 'text-[#cdd7e1] hover:text-[#6f7b83]'"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
+                                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                            </svg>
+                                        </button>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>

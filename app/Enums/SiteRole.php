@@ -6,6 +6,7 @@ enum SiteRole: string
 {
     case SuperAdmin = 'super admin';
     case Admin = 'admin';
+    case Curator = 'curator';
     case Member = 'member';
 
     /**

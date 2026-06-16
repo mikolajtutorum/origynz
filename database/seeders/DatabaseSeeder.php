@@ -18,12 +18,15 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesAndPermissionsSeeder::class);
 
         $user = User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name'     => 'Mikolaj Florysiak',
+            'email'    => 'mikolajflorysiak1@gmail.com',
+            'password' => bcrypt('password'),
         ]);
 
         app(TreeAccessService::class)->assignDefaultRole($user);
         setPermissionsTeamId(0);
         $user->syncRoles([SiteRole::SuperAdmin->value]);
+
+        $this->call(BibleTreeSeeder::class);
     }
 }

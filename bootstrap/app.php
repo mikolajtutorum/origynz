@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function () {
             \Illuminate\Support\Facades\Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
+
+            \Illuminate\Support\Facades\Route::middleware('web')
+                ->group(base_path('routes/integrations.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -21,9 +24,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'super.admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
-            'honeypot' => \Spatie\Honeypot\ProtectAgainstSpam::class,
+            'honeypot'    => \Spatie\Honeypot\ProtectAgainstSpam::class,
         ]);
         $middleware->appendToGroup('web', \Spatie\Honeypot\ProtectAgainstSpam::class);
+
+        // CORS — allow any origin to read from the public REST API
+        $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->report(function (Throwable $e): void {

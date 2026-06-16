@@ -7,6 +7,7 @@ use App\Http\Controllers\FamilyEventController;
 use App\Http\Controllers\FamilyEventSettingsController;
 use App\Http\Controllers\FamilyStatisticsController;
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Api\V1\DocumentationController;
 use App\Http\Controllers\GlobalTreeController;
 use App\Http\Controllers\GlobalTreeSettingsController;
 use App\Http\Controllers\LegalController;
@@ -16,11 +17,19 @@ use App\Http\Controllers\GedcomController;
 use App\Http\Controllers\MediaItemController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\PersonGlobalExclusionController;
+use App\Http\Controllers\PersonMergeController;
 use App\Http\Controllers\PersonRelationshipController;
+use App\Http\Controllers\ProfileClaimController;
+use App\Http\Controllers\ProfileDiscussionController;
+use App\Http\Controllers\ProfileWatchController;
+use App\Http\Controllers\RelationshipCalculatorController;
 use App\Http\Controllers\SourceController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\TreeManagerController;
 use Illuminate\Support\Facades\Route;
+
+// Public API documentation page (no auth required)
+Route::get('/api/docs', DocumentationController::class)->name('api.docs');
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -49,9 +58,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('settings/data-export', [DSARController::class, 'export'])->name('settings.data-export.store');
     Route::get('global-tree', [GlobalTreeController::class, 'index'])->name('global-tree.index');
     Route::get('global-tree/pedigree', [GlobalTreeController::class, 'pedigree'])->name('global-tree.pedigree');
+    Route::get('global-tree/pedigree/search', [GlobalTreeController::class, 'pedigreeSearch'])->name('global-tree.pedigree.search');
     Route::get('global-tree/pedigree/person/{person}', [GlobalTreeController::class, 'pedigreePerson'])->name('global-tree.pedigree.person');
+    Route::get('global-tree/relationship-calculator', [RelationshipCalculatorController::class, 'index'])->name('global-tree.relationship-calculator');
+    Route::post('global-tree/relationship-calculator/calculate', [RelationshipCalculatorController::class, 'calculate'])->name('global-tree.relationship-calculator.calculate');
+    Route::get('global-tree/merge', [PersonMergeController::class, 'index'])->name('global-tree.merge.index');
+    Route::post('global-tree/merge/scan', [PersonMergeController::class, 'scan'])->name('global-tree.merge.scan');
+    Route::get('global-tree/merge/{candidate}', [PersonMergeController::class, 'review'])->name('global-tree.merge.review');
+    Route::post('global-tree/merge/{candidate}/execute', [PersonMergeController::class, 'execute'])->name('global-tree.merge.execute');
+    Route::patch('global-tree/merge/{candidate}/dismiss', [PersonMergeController::class, 'dismiss'])->name('global-tree.merge.dismiss');
     Route::patch('trees/{tree}/global-tree-settings', [GlobalTreeSettingsController::class, 'update'])->name('trees.global-tree-settings.update');
     Route::patch('people/{person}/global-tree-exclusion', [PersonGlobalExclusionController::class, 'update'])->name('people.global-tree-exclusion.update');
+    Route::get('people/watch-list', [ProfileWatchController::class, 'index'])->name('people.watch-list');
+    Route::post('people/{person}/watch', [ProfileWatchController::class, 'toggle'])->name('people.watch.toggle');
+    Route::get('people/claims', [ProfileClaimController::class, 'index'])->name('people.claims.index');
+    Route::post('people/{person}/claims', [ProfileClaimController::class, 'store'])->name('people.claims.store');
+    Route::patch('people/claims/{claim}/review', [ProfileClaimController::class, 'review'])->name('people.claims.review');
+    Route::post('people/{person}/discussions', [ProfileDiscussionController::class, 'store'])->name('people.discussions.store');
+    Route::delete('people/discussions/{discussion}', [ProfileDiscussionController::class, 'destroy'])->name('people.discussions.destroy');
     Route::get('family-events', [FamilyEventController::class, 'index'])->name('family-events.index');
     Route::get('family-statistics', FamilyStatisticsController::class)->name('family-statistics.index');
     Route::get('media-library', [MediaItemController::class, 'globalIndex'])->name('media.index');

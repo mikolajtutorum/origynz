@@ -52,7 +52,7 @@ class GlobalTreePedigreeService
      * @return array{0: list<array<string, mixed>>, 1: list<array<string, string>>, 2: array<string, int>}
      */
     /**
-     * @param  list<int>  $ownedTreeIds
+     * @param  list<string>  $ownedTreeIds
      * @return array{0: list<array<string, mixed>>, 1: list<array<string, string>>, 2: array<string, int>}
      */
     public function buildChart(Person $rootPerson, int $generations = 3, array $ownedTreeIds = []): array
@@ -73,7 +73,7 @@ class GlobalTreePedigreeService
     }
 
     /**
-     * @return array{0: array<int, list<int>>, 1: array<int, list<int>>, 2: array<int, list<int>>}
+     * @return array{0: array<string, list<string>>, 1: array<string, list<string>>, 2: array<string, list<string>>}
      */
     private function buildMaps(Collection $relationships): array
     {
@@ -99,7 +99,7 @@ class GlobalTreePedigreeService
         return [$parentsMap, $childrenMap, $spousesMap];
     }
 
-    private function push(array &$map, int $key, int $value): void
+    private function push(array &$map, string $key, string $value): void
     {
         if (! isset($map[$key]) || ! in_array($value, $map[$key], true)) {
             $map[$key][] = $value;
@@ -108,9 +108,9 @@ class GlobalTreePedigreeService
 
     /**
      * @param  \Illuminate\Support\Collection<int, Person>  $peopleById
-     * @param  array<int, list<int>>  $parentsMap
-     * @param  array<int, list<int>>  $childrenMap
-     * @param  array<int, list<int>>  $spousesMap
+     * @param  array<string, list<string>>  $parentsMap
+     * @param  array<string, list<string>>  $childrenMap
+     * @param  array<string, list<string>>  $spousesMap
      * @return array{0: list<array<string, mixed>>, 1: list<array<string, string>>, 2: array<string, int>}
      */
     private function layout(
@@ -440,7 +440,7 @@ class GlobalTreePedigreeService
     }
 
     /**
-     * @param  list<int>  $ownedTreeIds
+     * @param  list<string>  $ownedTreeIds
      * @return array<string, mixed>
      */
     public function buildSidebarData(Person $person, array $ownedTreeIds = []): array
@@ -488,7 +488,7 @@ class GlobalTreePedigreeService
         $familyIds    = array_unique(array_merge($parentIds, $childIds, $spouseIds));
         $loadedFamily = Person::whereIn('id', $familyIds)->get()->keyBy('id');
 
-        $toMember = fn (int $id): array => [
+        $toMember = fn (string $id): array => [
             'id'   => $id,
             'data' => $this->privacy->buildDisplayData($loadedFamily[$id], $ownedTreeIds),
         ];

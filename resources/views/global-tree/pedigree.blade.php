@@ -27,18 +27,37 @@
                         @endif
                     </div>
 
-                    @if ($rootPerson)
-                        <div class="flex items-center gap-5 text-[14px] text-[#64707b]">
-                            <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-4">
+                        @if ($hasEnabledTree)
+                            {{-- Pedigree search --}}
+                            <div class="relative" data-pedigree-search-wrap>
+                                <div class="flex items-center gap-1.5 rounded-[8px] border border-[#dde3ea] bg-[#f7f9fb] px-3 py-1.5 focus-within:border-[#93a8be] focus-within:bg-white">
+                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" style="color:#8fa0b0;flex-shrink:0"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3" stroke-linecap="round"/></svg>
+                                    <input type="text"
+                                           placeholder="{{ __('Search pedigree…') }}"
+                                           autocomplete="off"
+                                           class="w-44 bg-transparent text-[13px] text-[#2f3b45] placeholder-[#9aabb8] outline-none"
+                                           data-pedigree-search-input>
+                                    <button type="button"
+                                            class="hidden text-[#9aabb8] hover:text-[#5a7080]"
+                                            data-pedigree-search-clear>✕</button>
+                                </div>
+                                <ul class="absolute right-0 top-full z-50 mt-1 hidden max-h-72 w-72 overflow-y-auto rounded-[10px] border border-[#dde3ea] bg-white py-1 shadow-lg"
+                                    data-pedigree-search-results></ul>
+                            </div>
+                        @endif
+
+                        @if ($rootPerson)
+                            <div class="flex items-center gap-2 text-[14px] text-[#64707b]">
                                 @foreach ([2, 3, 4, 5] as $gen)
-                                    <a href="{{ route('global-tree.pedigree', ['generations' => $gen]) }}"
+                                    <a href="{{ route('global-tree.pedigree', array_filter(['generations' => $gen, 'focus' => request('focus')])) }}"
                                        class="rounded-full px-2 py-1 {{ $generations === $gen ? 'bg-[#ff6c2f] text-white' : 'hover:bg-[#f3f3f3]' }}">
                                         {{ $gen }}
                                     </a>
                                 @endforeach
                             </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -347,6 +366,125 @@
                 fitCanvas();
                 window.setTimeout(() => centerCard(focusCard, 'smooth'), 120);
             });
+        })();
+        </script>
+        @endif
+
+        @if ($hasEnabledTree)
+        <script>
+        (function () {
+            const searchInput   = document.querySelector('[data-pedigree-search-input]');
+            const resultsList   = document.querySelector('[data-pedigree-search-results]');
+            const clearBtn      = document.querySelector('[data-pedigree-search-clear]');
+
+            if (!searchInput || !resultsList) { return; }
+
+            const generations = {{ $generations }};
+            let debounceTimer = null;
+            let activeIndex   = -1;
+
+            const closeResults = () => {
+                resultsList.classList.add('hidden');
+                resultsList.innerHTML = '';
+                activeIndex = -1;
+            };
+
+            const showResults = (items) => {
+                resultsList.innerHTML = '';
+                activeIndex = -1;
+
+                if (!items.length) {
+                    resultsList.innerHTML = '<li class="px-4 py-3 text-[13px] text-[#8fa0b0]">{{ __('No results') }}</li>';
+                    resultsList.classList.remove('hidden');
+                    return;
+                }
+
+                items.forEach((item) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex cursor-pointer flex-col gap-0.5 px-4 py-2.5 hover:bg-[#f3f7fb]';
+                    li.dataset.personId = item.id;
+                    li.innerHTML = `
+                        <span class="text-[13px] font-medium text-[#2f3b45]">${item.name}</span>
+                        <span class="text-[11px] text-[#8fa0b0]">${item.life_span ?? ''}${item.tree ? ' · ' + item.tree : ''}</span>`;
+                    li.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        navigateTo(item.id, item.name);
+                    });
+                    resultsList.appendChild(li);
+                });
+
+                resultsList.classList.remove('hidden');
+            };
+
+            const navigateTo = (personId, personName) => {
+                searchInput.value = personName;
+                clearBtn.classList.remove('hidden');
+                closeResults();
+                const url = new URL(window.location.href);
+                url.searchParams.set('focus', personId);
+                url.searchParams.set('generations', generations);
+                window.location.href = url.toString();
+            };
+
+            const fetchResults = async (q) => {
+                try {
+                    const res = await fetch(`{{ route('global-tree.pedigree.search') }}?q=${encodeURIComponent(q)}`, {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    });
+                    if (!res.ok) { return; }
+                    showResults(await res.json());
+                } catch { /* silent */ }
+            };
+
+            searchInput.addEventListener('input', () => {
+                const q = searchInput.value.trim();
+                clearBtn.classList.toggle('hidden', q === '');
+                clearTimeout(debounceTimer);
+                if (q.length < 2) { closeResults(); return; }
+                debounceTimer = setTimeout(() => fetchResults(q), 220);
+            });
+
+            searchInput.addEventListener('keydown', (e) => {
+                const items = [...resultsList.querySelectorAll('li[data-person-id]')];
+                if (!items.length) { return; }
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = Math.min(activeIndex + 1, items.length - 1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIndex = Math.max(activeIndex - 1, 0);
+                } else if (e.key === 'Enter' && activeIndex >= 0) {
+                    e.preventDefault();
+                    const active = items[activeIndex];
+                    navigateTo(active.dataset.personId, active.querySelector('span')?.textContent ?? '');
+                    return;
+                } else if (e.key === 'Escape') {
+                    closeResults();
+                    return;
+                }
+
+                items.forEach((li, i) => li.classList.toggle('bg-[#f3f7fb]', i === activeIndex));
+            });
+
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearBtn.classList.add('hidden');
+                closeResults();
+                const url = new URL(window.location.href);
+                url.searchParams.delete('focus');
+                window.location.href = url.toString();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('[data-pedigree-search-wrap]')) { closeResults(); }
+            });
+
+            // Pre-fill if currently focused on a specific person
+            @if(request('focus') && $rootPerson)
+            searchInput.value = @js($rootPerson->display_name);
+            clearBtn.classList.remove('hidden');
+            @endif
         })();
         </script>
         @endif

@@ -91,21 +91,20 @@
             />
 
             <div class="flex flex-col gap-3">
-                <flux:checkbox name="terms" :checked="old('terms')" required>
-                    <span>
+                <div class="flex items-start gap-2">
+                    <flux:checkbox name="terms" :checked="old('terms')" required class="mt-0.5 shrink-0" />
+                    <span class="text-sm text-zinc-700 dark:text-zinc-300">
                         {{ __('I agree to the') }}
                         <a href="{{ route('legal.terms') }}" target="_blank" class="underline text-blue-600 hover:text-blue-700">{{ __('Terms of Service') }}</a>
                         {{ __('and') }}
                         <a href="{{ route('legal.privacy') }}" target="_blank" class="underline text-blue-600 hover:text-blue-700">{{ __('Privacy Policy') }}</a>
                     </span>
-                </flux:checkbox>
+                </div>
                 @error('terms')
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror
 
-                <flux:checkbox name="age_confirmation" :checked="old('age_confirmation')" required>
-                    {{ __('I confirm I am 13 years of age or older') }}
-                </flux:checkbox>
+                <flux:checkbox name="age_confirmation" :label="__('I confirm I am 13 years of age or older')" :checked="old('age_confirmation')" required />
                 @error('age_confirmation')
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror

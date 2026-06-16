@@ -75,6 +75,13 @@ class Person extends Model
         'burial_place',
         'is_living',
         'exclude_from_global_tree',
+        'trust_score',
+        'merged_into_id',
+        'findagrave_memorial_id',
+        'billiongraves_id',
+        'familysearch_person_id',
+        'wikitree_id',
+        'geni_profile_id',
         'headline',
         'notes',
         'physical_description',
@@ -86,10 +93,11 @@ class Person extends Model
     protected function casts(): array
     {
         return [
-            'birth_date' => 'date',
-            'death_date' => 'date',
-            'is_living' => 'bool',
+            'birth_date'               => 'date',
+            'death_date'               => 'date',
+            'is_living'                => 'bool',
             'exclude_from_global_tree' => 'bool',
+            'trust_score'              => 'integer',
         ];
     }
 
@@ -149,6 +157,65 @@ class Person extends Model
         return $this->hasMany(PersonEvent::class)->orderBy('sort_order')->orderBy('event_date')->orderBy('id');
     }
 
+    /**
+     * @return HasMany<ProfileDiscussion, $this>
+     */
+    public function discussions(): HasMany
+    {
+        return $this->hasMany(ProfileDiscussion::class)
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user'])
+            ->orderByDesc('created_at');
+    }
+
+    /**
+     * @return HasMany<ProfileWatch, $this>
+     */
+    public function watches(): HasMany
+    {
+        return $this->hasMany(ProfileWatch::class);
+    }
+
+    /**
+     * @return HasMany<ProfileClaim, $this>
+     */
+    public function claims(): HasMany
+    {
+        return $this->hasMany(ProfileClaim::class);
+    }
+
+    /**
+     * @return HasMany<MergeCandidate, $this>
+     */
+    public function mergeCandidatesAsA(): HasMany
+    {
+        return $this->hasMany(MergeCandidate::class, 'person_a_id');
+    }
+
+    /**
+     * @return HasMany<MergeCandidate, $this>
+     */
+    public function mergeCandidatesAsB(): HasMany
+    {
+        return $this->hasMany(MergeCandidate::class, 'person_b_id');
+    }
+
+    /**
+     * @return HasMany<PhotoRequest, $this>
+     */
+    public function photoRequests(): HasMany
+    {
+        return $this->hasMany(PhotoRequest::class);
+    }
+
+    /**
+     * @return HasMany<DnaKit, $this>
+     */
+    public function dnaKits(): HasMany
+    {
+        return $this->hasMany(DnaKit::class);
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return collect([$this->given_name, $this->middle_name, $this->surname])
@@ -202,6 +269,10 @@ class Person extends Model
     {
         if (! $value) {
             return null;
+        }
+
+        if (preg_match('/(\d{1,4})\s*(B\.?C\.?E?\.?)/i', $value, $matches)) {
+            return $matches[1] . ' BCE';
         }
 
         preg_match('/\b(\d{4})\b/', $value, $matches);

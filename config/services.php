@@ -66,4 +66,22 @@ return [
         ))),
     ],
 
+    /*
+     * Genealogy platform integrations — credentials registered at each provider's
+     * developer portal. See config/integrations.php for deeper settings.
+     */
+    'familysearch' => [
+        'client_id'     => env('FAMILYSEARCH_CLIENT_ID'),
+        'client_secret' => env('FAMILYSEARCH_CLIENT_SECRET'),
+        'redirect'      => env('APP_URL').'/integrations/familysearch/callback',
+    ],
+
+    'wikitree' => [],
+
+    'geni' => [
+        'client_id'     => env('GENI_CLIENT_ID'),
+        'client_secret' => env('GENI_CLIENT_SECRET'),
+        'redirect'      => env('APP_URL').'/integrations/geni/callback',
+    ],
+
 ];

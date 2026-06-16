@@ -122,13 +122,36 @@ class TreeAccessService
 
     public function ensureBaseRecordsExist(): void
     {
+        $originalTeamId = getPermissionsTeamId();
+        setPermissionsTeamId(self::SITE_TEAM_ID);
+
         foreach (SiteRole::values() as $roleName) {
             Role::findOrCreate($roleName, 'web');
         }
 
+        setPermissionsTeamId($originalTeamId);
+
         foreach (TreePermission::values() as $permissionName) {
             Permission::findOrCreate($permissionName, 'web');
         }
+    }
+
+    public function assignCuratorRole(User $user): void
+    {
+        $this->ensureBaseRecordsExist();
+
+        $this->forSiteContext(function () use ($user): void {
+            $user->unsetRelation('roles');
+            $user->assignRole(SiteRole::Curator->value);
+        });
+    }
+
+    public function removeCuratorRole(User $user): void
+    {
+        $this->forSiteContext(function () use ($user): void {
+            $user->unsetRelation('roles');
+            $user->removeRole(SiteRole::Curator->value);
+        });
     }
 
     /**
@@ -171,6 +194,16 @@ class TreeAccessService
         } finally {
             setPermissionsTeamId($originalTeamId);
         }
+    }
+
+    /**
+     * Public wrapper for checking site-level roles from outside this service.
+     *
+     * @param  list<SiteRole>  $roles
+     */
+    public function hasSiteRolePublic(User $user, array $roles): bool
+    {
+        return $this->hasSiteRole($user, $roles);
     }
 
     /**
