@@ -2,26 +2,28 @@
 
 namespace App\Support\Gedcom;
 
+use App\Jobs\DownloadGedcomMediaJob;
 use App\Models\FamilyTree;
+use App\Models\MediaItem;
 use App\Models\Person;
 use App\Models\PersonRelationship;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Facades\Activity;
 
 class GedcomImporter
 {
+    public function __construct(private readonly GedcomMediaDownloader $media) {}
+
     /**
      * @return array{people_created:int, relationships_created:int, first_person_id:int|null, owner_selection_required:bool}
      */
     public function import(FamilyTree $tree, UploadedFile $file, User $user, ?Closure $onProgress = null): array
     {
-        $onProgress && $onProgress(3, 'Reading file...');
+        $onProgress && $onProgress(3, 'Reading file...', 'reading');
         $content = $this->normalizeContent((string) $file->get());
 
         return $this->doImport($tree, $content, $user, $onProgress);
@@ -32,7 +34,7 @@ class GedcomImporter
      */
     public function importFromPath(FamilyTree $tree, string $filePath, User $user, ?Closure $onProgress = null): array
     {
-        $onProgress && $onProgress(3, 'Reading file...');
+        $onProgress && $onProgress(3, 'Reading file...', 'reading');
         $content = $this->normalizeContent((string) file_get_contents($filePath));
 
         return $this->doImport($tree, $content, $user, $onProgress);
@@ -43,15 +45,20 @@ class GedcomImporter
      */
     private function doImport(FamilyTree $tree, string $content, User $user, ?Closure $onProgress): array
     {
-        $onProgress && $onProgress(10, 'Parsing GEDCOM records...');
+        $onProgress && $onProgress(10, 'Parsing GEDCOM records...', 'parsing');
         $records = $this->parse($content);
-        $onProgress && $onProgress(15, 'GEDCOM parsed successfully.');
+        $onProgress && $onProgress(15, 'GEDCOM parsed successfully.', 'parsing');
 
         $userId = $user->id;
         $totalIndi = count($records['INDI']);
 
-        return Activity::withoutLogs(function () use ($tree, $records, $user, $userId, $onProgress, $totalIndi) {
-            return DB::transaction(function () use ($tree, $records, $user, $userId, $onProgress, $totalIndi) {
+        // Ids of media items whose files live on a remote URL. Downloading happens
+        // in a background job after this transaction commits, so a media-heavy
+        // import can never time out (or hold a DB transaction open) on network I/O.
+        $pendingMediaIds = [];
+
+        $result = Activity::withoutLogs(function () use ($tree, $records, $user, $userId, $onProgress, $totalIndi, &$pendingMediaIds) {
+            return DB::transaction(function () use ($tree, $records, $user, $userId, $onProgress, $totalIndi, &$pendingMediaIds) {
                 $personMap = [];
                 $sourceMap = [];
                 $mediaMap = [];
@@ -62,7 +69,7 @@ class GedcomImporter
                 $placeholderOwner = $this->placeholderOwnerPerson($tree, $userId);
 
                 $this->applyHeadMetadata($tree, $records['HEAD'] ?? []);
-                $onProgress && $onProgress(18, 'Applied tree metadata.');
+                $onProgress && $onProgress(18, 'Applied tree metadata.', 'parsing');
 
             foreach ($records['SOUR'] as $xref => $record) {
                 $sourceMap[$xref] = $tree->sources()->create([
@@ -79,13 +86,18 @@ class GedcomImporter
                 ]);
             }
 
-            $onProgress && $onProgress(22, 'Created '.count($sourceMap).' sources.');
+            $onProgress && $onProgress(22, 'Created '.count($sourceMap).' sources.', 'sources');
 
             foreach ($records['OBJE'] as $xref => $record) {
-                $mediaMap[$xref] = $this->createMediaItem($tree, $userId, $record);
+                $mediaItem = $this->createMediaItem($tree, $userId, $record);
+                $mediaMap[$xref] = $mediaItem;
+
+                if ($this->media->isRemoteReference($mediaItem->external_reference)) {
+                    $pendingMediaIds[] = $mediaItem->id;
+                }
             }
 
-            $onProgress && $onProgress(27, 'Created '.count($mediaMap).' media items.');
+            $onProgress && $onProgress(27, 'Prepared '.count($mediaMap).' media items.', 'sources');
 
             $indiIndex = 0;
             $progressStep = max(1, (int) ($totalIndi / 100));
@@ -140,18 +152,25 @@ class GedcomImporter
                 $this->createImportedEvents($person, $record['EVENTS'] ?? [], $userId);
 
                 foreach ($record['INLINE_OBJE'] ?? [] as $inlineMedia) {
-                    $this->createMediaItem($tree, $userId, $inlineMedia, $person->id);
+                    $inlineMediaItem = $this->createMediaItem($tree, $userId, $inlineMedia, $person->id);
+
+                    if ($this->media->isRemoteReference($inlineMediaItem->external_reference)) {
+                        $pendingMediaIds[] = $inlineMediaItem->id;
+                    }
                 }
 
                 $indiIndex++;
 
                 if ($onProgress && $totalIndi > 0 && ($indiIndex % $progressStep === 0 || $indiIndex === $totalIndi)) {
                     $pct = 27 + (int) ($indiIndex / $totalIndi * 48);
-                    $onProgress($pct, "Creating persons: {$indiIndex} of {$totalIndi}");
+                    $onProgress($pct, "Creating people: {$indiIndex} of {$totalIndi}", 'people', [
+                        'current' => $indiIndex,
+                        'total' => $totalIndi,
+                    ]);
                 }
             }
 
-            $onProgress && $onProgress(76, 'Linking source citations...');
+            $onProgress && $onProgress(76, 'Linking source citations and media...', 'links');
 
             foreach ($records['INDI'] as $xref => $record) {
                 $person = $personMap[$xref] ?? null;
@@ -188,7 +207,7 @@ class GedcomImporter
                 }
             }
 
-            $onProgress && $onProgress(85, 'Building family relationships...');
+            $onProgress && $onProgress(85, 'Building family relationships...', 'relationships');
 
             foreach ($records['FAM'] as $familyXref => $record) {
                 $parents = array_values(array_filter([
@@ -261,7 +280,7 @@ class GedcomImporter
                 }
             }
 
-            $onProgress && $onProgress(96, 'Matching owner person...');
+            $onProgress && $onProgress(96, 'Matching owner person...', 'finalizing');
 
             $matchedImportedOwner = $this->resolveImportedOwnerMatch($personMap, $user);
 
@@ -290,6 +309,13 @@ class GedcomImporter
                 ];
             });
         });
+
+        // Now that the records are committed, fetch remote media in the background.
+        if ($pendingMediaIds !== []) {
+            DownloadGedcomMediaJob::dispatch($pendingMediaIds);
+        }
+
+        return $result;
     }
 
     /**
@@ -996,23 +1022,26 @@ class GedcomImporter
     }
 
     /**
+     * Create a media item record. Remote files are NOT downloaded here; that is
+     * deferred to {@see DownloadGedcomMediaJob} so the import never blocks on
+     * network I/O. The external_reference is always kept for later download.
+     *
      * @param  array<string, mixed>  $record
      */
-    private function createMediaItem(FamilyTree $tree, string $userId, array $record, ?string $personId = null)
+    private function createMediaItem(FamilyTree $tree, string $userId, array $record, ?string $personId = null): MediaItem
     {
         $fileReference = $record['FILE'] ?? 'imported-media';
-        $storedMedia = $this->downloadExternalMediaIfPossible((string) $fileReference);
-        $resolvedFileName = $storedMedia['file_name'] ?? $this->resolveImportedFileName((string) $fileReference, $record['TITL'] ?? null);
+        $resolvedFileName = $this->media->resolveFileName((string) $fileReference, $record['TITL'] ?? null);
 
         return $tree->mediaItems()->create([
             'person_id' => $personId,
             'uploaded_by' => $userId,
             'title' => $record['TITL'] ?? basename((string) $fileReference),
             'file_name' => $resolvedFileName,
-            'file_path' => $storedMedia['file_path'] ?? null,
+            'file_path' => null,
             'external_reference' => $fileReference,
-            'mime_type' => $storedMedia['mime_type'] ?? ($record['FORM'] ?? null),
-            'file_size' => $storedMedia['file_size'] ?? (isset($record['_FILESIZE']) ? (int) $record['_FILESIZE'] : 0),
+            'mime_type' => $record['FORM'] ?? null,
+            'file_size' => isset($record['_FILESIZE']) ? (int) $record['_FILESIZE'] : 0,
             'description' => $record['NOTE'] ?? null,
             'is_primary' => ($record['_PRIM'] ?? null) === 'Y',
             'gedcom_rin' => $record['RIN'] ?? null,
@@ -1025,84 +1054,6 @@ class GedcomImporter
             'is_parent_photo' => ($record['_PARENTPHOTO'] ?? null) === 'Y',
             'is_primary_cutout' => ($record['_PRIM_CUTOUT'] ?? null) === 'Y',
         ]);
-    }
-
-    /**
-     * @return array{file_path:string,file_name:string,mime_type:?string,file_size:int}|array{}
-     */
-    private function downloadExternalMediaIfPossible(string $fileReference): array
-    {
-        if (! filter_var($fileReference, FILTER_VALIDATE_URL)) {
-            return [];
-        }
-
-        try {
-            $response = Http::timeout(15)
-                ->withHeaders([
-                    'User-Agent' => 'KinfolkAtlasGedcomImporter/1.0',
-                ])
-                ->get($fileReference);
-        } catch (\Throwable) {
-            return [];
-        }
-
-        if (! $response->successful()) {
-            return [];
-        }
-
-        $body = $response->body();
-
-        if ($body === '') {
-            return [];
-        }
-
-        $mimeType = $response->header('Content-Type');
-        $fileName = $this->resolveImportedFileName($fileReference, null, $mimeType);
-        $path = 'media-items/imported/'.Str::uuid()->toString().'-'.$fileName;
-
-        Storage::disk('local')->put($path, $body);
-
-        return [
-            'file_path' => $path,
-            'file_name' => $fileName,
-            'mime_type' => $mimeType,
-            'file_size' => strlen($body),
-        ];
-    }
-
-    private function resolveImportedFileName(string $fileReference, ?string $fallbackTitle = null, ?string $mimeType = null): string
-    {
-        $path = parse_url($fileReference, PHP_URL_PATH) ?: $fileReference;
-        $candidate = basename((string) $path);
-
-        if ($candidate === '' || $candidate === '.' || $candidate === '/' || ! str_contains($candidate, '.')) {
-            $base = Str::slug((string) ($fallbackTitle ?: 'imported-media'));
-            $extension = $this->extensionFromMimeType($mimeType);
-
-            return trim(($base !== '' ? $base : 'imported-media').($extension ? '.'.$extension : ''), '.');
-        }
-
-        return $candidate;
-    }
-
-    private function extensionFromMimeType(?string $mimeType): ?string
-    {
-        if (! $mimeType) {
-            return null;
-        }
-
-        $normalized = strtolower(trim(explode(';', $mimeType)[0]));
-
-        return match ($normalized) {
-            'image/jpeg', 'image/jpg' => 'jpg',
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            'image/webp' => 'webp',
-            'image/bmp' => 'bmp',
-            'image/tiff' => 'tif',
-            'application/pdf' => 'pdf',
-            default => null,
-        };
     }
 
     /**

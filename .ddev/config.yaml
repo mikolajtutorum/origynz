@@ -4,11 +4,29 @@ docroot: public
 php_version: "8.3"
 webserver_type: nginx-fpm
 xdebug_enabled: false
-additional_hostnames: []
+additional_hostnames:
+  - origynzapi
 additional_fqdns: []
+nodejs_version: "22"
 database:
   type: mariadb
   version: "10.11"
 use_dns_when_possible: true
 composer_version: "2"
-web_environment: []
+# We manage .env ourselves (APP_URL points at the API host origynzapi.ddev.site,
+# not the primary project URL), so DDEV must not rewrite it on start.
+disable_settings_management: true
+web_environment:
+  - FRONTEND_URL=https://origynz.ddev.site
+# React SPA dev server. nginx (nginx_full/origynz-spa.conf) proxies origynz.ddev.site
+# to this Vite server; installs deps on first boot if missing, then runs with HMR.
+web_extra_daemons:
+  - name: vite
+    command: "cd /var/www/html/web && { [ -d node_modules ] || npm install --no-audit --no-fund; } && exec npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
+    directory: /var/www/html
+  # Processes queued jobs (GEDCOM import + background media downloads). Without a
+  # running worker these jobs sit in Redis forever, so imports never finish and
+  # imported photos never download. --timeout must exceed the import job timeout.
+  - name: queue-worker
+    command: "exec php artisan queue:work redis --tries=1 --timeout=1800 --sleep=2 --rest=1"
+    directory: /var/www/html

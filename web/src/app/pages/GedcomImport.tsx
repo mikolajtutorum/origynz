@@ -1,0 +1,234 @@
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { gedcomApi, type ImportProgress, type ImportStage } from '@core/api/endpoints/gedcom';
+import { useTrees } from '@core/queries/trees';
+import { AppLayout } from '../components/AppLayout';
+import { Button, FormError, Select, TextField } from '../components/ui';
+
+// Ordered pipeline the importer walks through. `queued`, `processing`, `failed`
+// are transient states handled separately and are not shown as their own step.
+const STAGES: { key: ImportStage; label: string; hint: string }[] = [
+  { key: 'reading', label: 'Reading file', hint: 'Decoding and normalising the upload' },
+  { key: 'parsing', label: 'Parsing records', hint: 'Reading GEDCOM tags and tree metadata' },
+  { key: 'sources', label: 'Sources & media', hint: 'Importing citations and media references' },
+  { key: 'people', label: 'Creating people', hint: 'Adding every individual to the tree' },
+  { key: 'links', label: 'Linking citations & media', hint: 'Attaching sources and photos to people' },
+  { key: 'relationships', label: 'Building relationships', hint: 'Connecting spouses, parents and children' },
+  { key: 'finalizing', label: 'Finalizing', hint: 'Matching the tree owner and wrapping up' },
+  { key: 'done', label: 'Complete', hint: 'Your tree is ready' },
+];
+
+function stageIndex(stage: ImportStage | undefined): number {
+  if (!stage || stage === 'queued') return -1;
+  if (stage === 'processing') return 0;
+  return STAGES.findIndex((s) => s.key === stage);
+}
+
+function StageRow({ state, label, hint, detail }: { state: 'done' | 'active' | 'pending'; label: string; hint: string; detail?: string }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span
+        className={[
+          'mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full border text-[11px] font-semibold',
+          state === 'done' && 'border-emerald-500 bg-emerald-500 text-white',
+          state === 'active' && 'border-neutral-900 text-neutral-900',
+          state === 'pending' && 'border-neutral-300 text-neutral-300',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        {state === 'done' ? (
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+            <path
+              fillRule="evenodd"
+              d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4l3.3 3.3 6.8-6.8a1 1 0 011.4 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ) : state === 'active' ? (
+          <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-900" />
+        ) : null}
+      </span>
+      <div className="min-w-0">
+        <p className={state === 'pending' ? 'text-sm text-neutral-400' : 'text-sm font-medium text-neutral-800'}>{label}</p>
+        <p className="text-xs text-neutral-400">{detail ?? hint}</p>
+      </div>
+    </li>
+  );
+}
+
+export function GedcomImport() {
+  const navigate = useNavigate();
+  const { data: trees } = useTrees();
+
+  const [file, setFile] = useState<File | null>(null);
+  const [treeName, setTreeName] = useState('');
+  const [target, setTarget] = useState('new'); // 'new' | tree id
+  const [importId, setImportId] = useState<string | null>(null);
+  const [progress, setProgress] = useState<ImportProgress | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const poll = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!importId) return;
+    poll.current = setInterval(async () => {
+      try {
+        const p = await gedcomApi.progress(importId);
+        setProgress(p);
+        if (p.status === 'done') {
+          if (poll.current) clearInterval(poll.current);
+          if (p.tree_id)
+            setTimeout(
+              () =>
+                navigate(`/trees/${p.tree_id}`, {
+                  // Ask the user to pick themselves when the importer couldn't.
+                  state: p.owner_selection_required ? { chooseHome: true } : undefined,
+                }),
+              900,
+            );
+        } else if (p.status === 'failed') {
+          if (poll.current) clearInterval(poll.current);
+          setError(p.message);
+        }
+      } catch {
+        /* keep polling */
+      }
+    }, 1200);
+    return () => {
+      if (poll.current) clearInterval(poll.current);
+    };
+  }, [importId, navigate]);
+
+  const submit = async () => {
+    if (!file) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const form = new FormData();
+      form.append('gedcom_file', file);
+      if (target === 'new') {
+        if (treeName.trim()) form.append('tree_name', treeName.trim());
+      } else {
+        form.append('tree_id', target);
+      }
+      const started = await gedcomApi.importNew(form);
+      setImportId(started.import_id);
+      setProgress({
+        status: 'queued',
+        stage: 'queued',
+        progress: 0,
+        message: 'Queued…',
+        current: null,
+        total: null,
+        tree_id: started.tree_id,
+        first_person_id: null,
+      });
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const busy = importId !== null && progress?.status !== 'failed';
+  const pct = Math.max(0, Math.min(100, Math.round(progress?.progress ?? 0)));
+  const activeIndex = stageIndex(progress?.stage);
+  const queued = progress?.status === 'queued';
+  const done = progress?.status === 'done';
+
+  return (
+    <AppLayout>
+      <h1 className="text-2xl font-semibold text-neutral-900">Import GEDCOM</h1>
+      <p className="mt-1 text-neutral-500">Upload a .ged file to create or extend a family tree.</p>
+
+      <div className="mt-6 max-w-xl rounded-xl border border-neutral-200 bg-white p-5">
+        {!busy ? (
+          <div className="flex flex-col gap-4">
+            <FormError message={error} />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-neutral-700">GEDCOM file</label>
+              <input
+                type="file"
+                accept=".ged,.gedcom,text/plain"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="text-sm"
+              />
+            </div>
+            <Select label="Destination" value={target} onChange={(e) => setTarget(e.target.value)}>
+              <option value="new">Create a new tree</option>
+              {trees?.map((t) => (
+                <option key={t.id} value={t.id}>
+                  Import into: {t.name}
+                </option>
+              ))}
+            </Select>
+            {target === 'new' && (
+              <TextField
+                label="New tree name (optional)"
+                value={treeName}
+                onChange={(e) => setTreeName(e.target.value)}
+                placeholder="Defaults to the file name"
+              />
+            )}
+            <Button onClick={submit} disabled={!file} loading={submitting}>
+              Start import
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-sm font-medium text-neutral-800">{progress?.message}</p>
+                <span className="font-mono text-sm tabular-nums text-neutral-500">{pct}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
+                <div
+                  className={`h-full transition-all duration-500 ${done ? 'bg-emerald-500' : 'bg-neutral-900'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              {progress?.total != null && progress.total > 0 && progress.stage === 'people' && (
+                <p className="text-xs text-neutral-400">
+                  {progress.current ?? 0} of {progress.total} people processed
+                </p>
+              )}
+            </div>
+
+            <ol className="flex flex-col gap-3 border-t border-neutral-100 pt-4">
+              {queued && (
+                <li className="flex items-center gap-3 text-sm text-neutral-500">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-700" />
+                  Waiting for a worker to pick up the import…
+                </li>
+              )}
+              {STAGES.map((s, i) => {
+                const state = done || i < activeIndex ? 'done' : i === activeIndex ? 'active' : 'pending';
+                const detail =
+                  s.key === 'people' && i === activeIndex && progress?.total
+                    ? `${progress.current ?? 0} of ${progress.total} people`
+                    : undefined;
+                return <StageRow key={s.key} state={state} label={s.label} hint={s.hint} detail={detail} />;
+              })}
+            </ol>
+
+            {done && (
+              <p className="text-sm text-emerald-600">
+                {progress?.people_created != null
+                  ? `Added ${progress.people_created} people and ${progress.relationships_created ?? 0} relationships. `
+                  : ''}
+                Opening your tree…
+              </p>
+            )}
+            {!done && (
+              <p className="text-xs text-neutral-400">
+                Photos and other media linked to external URLs continue downloading in the background after the import
+                finishes.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </AppLayout>
+  );
+}

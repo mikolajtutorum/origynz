@@ -87,8 +87,11 @@ class GedcomController extends Controller
 
         return response()->json([
             'status' => $data['status'],
+            'stage' => $data['stage'] ?? $data['status'],
             'progress' => $data['progress'],
             'message' => $data['message'],
+            'current' => $data['current'] ?? null,
+            'total' => $data['total'] ?? null,
         ]);
     }
 
@@ -160,9 +163,11 @@ class GedcomController extends Controller
 
         Cache::put("gedcom_import_{$importId}", [
             'status' => 'queued',
+            'stage' => 'queued',
             'progress' => 0,
             'message' => 'Queued for processing...',
             'user_id' => $request->user()->id,
+            'tree_id' => $tree->id,
         ], now()->addHour());
 
         ImportGedcomJob::dispatch($importId, $tree->id, $filePath, $request->user()->id);

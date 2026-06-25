@@ -58,3 +58,25 @@ jobs:
 
       - name: Run Tests
         run: ./vendor/bin/phpunit
+
+  web:
+    name: react-spa
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install Web Dependencies
+        working-directory: web
+        run: npm install
+
+      - name: Typecheck & Build SPA
+        working-directory: web
+        env:
+          VITE_API_URL: https://origynzapi.ddev.site
+        run: npm run build

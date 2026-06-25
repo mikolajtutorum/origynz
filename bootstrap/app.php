@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Middleware\EnsureSuperAdmin;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Support\Facades\Route;
+use Spatie\Honeypot\ProtectAgainstSpam;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,29 +16,34 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
-            \Illuminate\Support\Facades\Route::middleware('web')
+            Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
 
-            \Illuminate\Support\Facades\Route::middleware('web')
+            Route::middleware('web')
                 ->group(base_path('routes/integrations.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \App\Http\Middleware\SetLocale::class,
+            SetLocale::class,
         ]);
         $middleware->alias([
-            'super.admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
-            'honeypot'    => \Spatie\Honeypot\ProtectAgainstSpam::class,
+            'super.admin' => EnsureSuperAdmin::class,
+            'honeypot' => ProtectAgainstSpam::class,
         ]);
-        $middleware->appendToGroup('web', \Spatie\Honeypot\ProtectAgainstSpam::class);
+        $middleware->appendToGroup('web', ProtectAgainstSpam::class);
 
         // CORS — allow any origin to read from the public REST API
         $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\HandleCors::class,
+            HandleCors::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Headless API: always render JSON for api/* (never redirect to a login page).
+        $exceptions->shouldRenderJsonWhen(
+            fn ($request, Throwable $e) => $request->is('api/*') || $request->expectsJson()
+        );
+
         $exceptions->report(function (Throwable $e): void {
             if (app()->bound('sentry') && app()->environment('production')) {
                 app('sentry')->captureException($e);

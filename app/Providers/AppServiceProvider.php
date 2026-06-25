@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Enums\SiteRole;
+use App\Models\PersonalAccessToken;
 use App\Models\User;
+use App\Support\Authorization\TreeAccessService;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -13,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Onboard\Facades\Onboard;
 
 class AppServiceProvider extends ServiceProvider
@@ -33,6 +36,10 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configureOnboarding();
         $this->configureRateLimiting();
+
+        // The personal_access_tokens table uses a uuid primary key, so Sanctum
+        // must use our UUID-aware token model.
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
     }
 
     protected function configureOnboarding(): void
@@ -72,7 +79,7 @@ class AppServiceProvider extends ServiceProvider
 
             $isSuperAdmin = DB::table($tables['model_has_roles'].' as model_roles')
                 ->join($tables['roles'].' as roles', 'roles.id', '=', 'model_roles.role_id')
-                ->where('model_roles.'.$teamKey, \App\Support\Authorization\TreeAccessService::SITE_TEAM_ID)
+                ->where('model_roles.'.$teamKey, TreeAccessService::SITE_TEAM_ID)
                 ->where('model_roles.model_type', User::class)
                 ->where('model_roles.'.$morphKey, $user->getKey())
                 ->where('roles.name', SiteRole::SuperAdmin->value)
