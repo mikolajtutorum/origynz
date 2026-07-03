@@ -1,7 +1,7 @@
 import type { RelationRole } from '@core/api/endpoints/people';
 import type { Person } from '@core/models';
 
-// MyHeritage-style radial chooser: the anchor person sits in the middle and the
+// Radial chooser: the anchor person sits in the middle and the
 // possible relatives radiate around it. Picking one hands the role back so the
 // caller can open the add-person form.
 type Slot = { role: RelationRole; label: string; tone: 'male' | 'female' | 'neutral' };

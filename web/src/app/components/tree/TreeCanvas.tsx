@@ -4,7 +4,9 @@ import type { FamilyGraph } from '@core/tree/graph';
 import { buildTreeLayout, seedExpansion, CARD_W, CARD_H, type Connector } from '@core/tree/layout';
 
 // Build an SVG path for a polyline, rounding each interior corner so the
-// connectors read like the MyHeritage elbows.
+// connectors read as smooth elbows. Points flagged `hop` mark where
+// this horizontal run crosses another connector's vertical: the path jumps it
+// with a small arc, so it stays unambiguous which family each line belongs to.
 function roundedPath(points: Connector, radius = 12): string {
   const pts = points.filter((p, i) => i === 0 || p.x !== points[i - 1].x || p.y !== points[i - 1].y);
   if (pts.length < 2) return '';
@@ -13,6 +15,12 @@ function roundedPath(points: Connector, radius = 12): string {
     const prev = pts[i - 1];
     const cur = pts[i];
     const next = pts[i + 1];
+    if (cur.hop) {
+      const dirX = Math.sign(next.x - prev.x) || 1;
+      const hr = Math.min(7, Math.abs(cur.x - prev.x) / 2, Math.abs(next.x - cur.x) / 2);
+      d += ` L ${cur.x - dirX * hr} ${cur.y} A ${hr} ${hr} 0 0 ${dirX === 1 ? 1 : 0} ${cur.x + dirX * hr} ${cur.y}`;
+      continue;
+    }
     const d1 = Math.hypot(cur.x - prev.x, cur.y - prev.y);
     const d2 = Math.hypot(next.x - cur.x, next.y - cur.y);
     const r = Math.min(radius, d1 / 2, d2 / 2);
@@ -228,11 +236,13 @@ export function TreeCanvas({
             <div
               key={id}
               className="group absolute left-0 top-0"
+              // No transform transition here: the SVG connectors cannot animate
+              // their shape, so cards and lines must jump together or the lines
+              // visibly detach from the cards on every relayout.
               style={{
                 width: CARD_W,
                 height: CARD_H,
                 transform: `translate(${c.x}px, ${c.y}px)`,
-                transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               {/* Every person carries this control. It re-centres the tree on the

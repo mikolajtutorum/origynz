@@ -31,6 +31,30 @@ export function buildFamilyGraph(people: Person[], relationships: Relationship[]
     }
   }
 
+  // The layout renders lists in adjacency order, so fix that order here once:
+  // children eldest-first by birth date (undated children keep their imported
+  // GEDCOM CHIL position, which is already birth order), parents father-first.
+  const stableSort = (map: Map<string, string[]>, rank: (id: string) => string | number) => {
+    for (const [key, list] of map) {
+      map.set(
+        key,
+        list
+          .map((id, i) => [id, i] as const)
+          .sort(([idA, iA], [idB, iB]) => {
+            const a = rank(idA);
+            const b = rank(idB);
+            if (a < b) return -1;
+            if (a > b) return 1;
+            return iA - iB;
+          })
+          .map(([id]) => id),
+      );
+    }
+  };
+  stableSort(childrenOf, (id) => peopleById.get(id)?.birth_date || '9999-99-99');
+  const sexOrder = { male: 0, unknown: 1, female: 2 } as const;
+  stableSort(parentsOf, (id) => sexOrder[peopleById.get(id)?.sex ?? 'unknown']);
+
   return { peopleById, parentsOf, childrenOf, spousesOf };
 }
 
