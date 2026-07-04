@@ -1,136 +1,119 @@
-# Origynz — Genealogy Workspace
+# Origynz
 
-A web app for researching, mapping, and preserving family history. Build private or shared family tree workspaces with people profiles, relationships, timelines, records, photos, and GEDCOM import/export.
+Origynz is a genealogy workspace for researching, mapping, and preserving family history. It supports private and shared family trees, person profiles, relationships, media, GEDCOM import/export, and API-driven account management.
 
-> **Architecture:** Origynz is split into two separately-deployed apps that run in **one DDEV project, two hostnames**:
->
-> | URL | App |
-> |---|---|
-> | `https://origynz.ddev.site` | **React + TypeScript SPA** (Vite) in [`web/`](web/) |
-> | `https://origynzapi.ddev.site` | **headless Laravel JSON API** (token / bearer auth) |
->
-> The SPA authenticates with Sanctum bearer tokens and talks to the API over CORS. The
-> SPA's `web/src/core/` layer (API client, query hooks, auth store, validation) is kept
-> platform-agnostic so a future **React Native** app can reuse it unchanged.
->
-> The legacy Blade/Livewire UI still ships during the migration; it is retired once the
-> SPA reaches full parity.
+## Current Architecture
+
+The app is now split into a Laravel JSON API and a React SPA. They run in one DDEV project with two local hostnames:
+
+| URL | App |
+|---|---|
+| `https://origynz.ddev.site` | React + TypeScript SPA in [`web/`](web/) |
+| `https://origynzapi.ddev.site` | Headless Laravel API |
+
+The SPA calls `/api/...` relative to its own origin. In DDEV, nginx proxies those requests to `origynzapi.ddev.site`, which keeps the app working through local HTTPS, `ddev share`, and LAN/tunnel access. The legacy Blade/Livewire UI has been retired; Laravel now serves API routes plus a small JSON root response.
 
 ## Features
 
-- Multi-tree workspaces with member invitations and access control
-- Person profiles: relationships, life events, sources, citations
-- GEDCOM import and export (async, with progress tracking)
-- Media library per tree
-- Family statistics dashboard
-- Configurable event types
-- Activity audit trail
-- Social login (Google, GitHub, Facebook, LinkedIn)
-- Two-factor authentication and email verification
+- Multi-tree workspaces with access control
+- Person profiles with relationships, events, sources, and citations
+- GEDCOM import/export with queued processing
+- Media library and signed media access
+- Global tree and relationship tools
+- Account settings, API tokens, email verification, and two-factor auth
+- Admin APIs for super-admin workflows
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| API backend | PHP 8.3+, Laravel 13 (JSON only) |
-| API auth | Laravel Fortify (headless), Sanctum bearer tokens, Socialite |
-| SPA frontend | React 19 + TypeScript, React Router, TanStack Query, Zustand, Tailwind CSS 4 (in `web/`) |
-| Legacy UI (being retired) | Livewire 4, Flux 2 |
-| Build | Vite, Node 22 |
-| Database | MariaDB 10.11 |
-| Queue | Redis + Laravel Horizon |
-| Web server | Nginx-FPM (routes the two hostnames; proxies the SPA to Vite in dev) |
+| API backend | PHP 8.3+, Laravel 13 |
+| API auth | Laravel Fortify, Sanctum bearer tokens, Socialite |
+| SPA frontend | React 19, TypeScript, React Router, TanStack Query, Zustand |
+| Styling/build | Tailwind CSS 4, Vite, Node 22 |
+| Database | MariaDB 10.11 in DDEV |
+| Queue | Redis queue worker via DDEV `web_extra_daemons` |
+| Web server | nginx-fpm, with a custom SPA server block |
 
-## Local Development (DDEV)
+## Local Development
 
 ### Prerequisites
 
-- [DDEV](https://ddev.readthedocs.io/en/stable/) installed
-- Docker running
+- DDEV
+- Docker
 
-### Setup
-
-```bash
-ddev start                # provisions both hostnames + a Vite dev server (web_extra_daemons)
-ddev composer setup       # install PHP deps, generate key, migrate
-ddev exec 'cd web && npm install'   # install SPA deps (also auto-installs on first boot)
-```
-
-- **SPA:** `https://origynz.ddev.site` (Vite dev server with HMR, proxied by nginx)
-- **API:** `https://origynzapi.ddev.site` (try `https://origynzapi.ddev.site/api/v1/health`)
-
-DDEV settings management is disabled (`disable_settings_management: true`) so that
-`APP_URL` can point at the **API** host while the SPA owns the primary hostname.
-
-### Running the dev environment
-
-The Vite dev server starts automatically with `ddev start`. For the queue/logs:
+### First Setup
 
 ```bash
-ddev exec php artisan horizon      # queue worker (GEDCOM imports)
-ddev exec php artisan pail         # log viewer
+ddev start
+ddev composer setup
+ddev exec 'cd web && npm install'
 ```
 
-### Environment variables
+`ddev start` also starts:
 
-Copy `.env.example` to `.env` and set the following:
+- the Vite dev server for `web/`
+- a Redis queue worker for GEDCOM imports and background media jobs
+
+Visit:
+
+- SPA: `https://origynz.ddev.site`
+- API health: `https://origynzapi.ddev.site/api/v1/health`
+
+### Environment
+
+DDEV settings management is disabled because this project needs separate API and frontend URLs. Keep these values in `.env`:
 
 ```env
-# Social login (at least one required)
-SOCIALITE_PROVIDERS=google,github
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=
-
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-GITHUB_REDIRECT_URI=
-
-# Queue (required for GEDCOM import)
+APP_URL=https://origynzapi.ddev.site
+FRONTEND_URL=https://origynz.ddev.site
 QUEUE_CONNECTION=redis
 REDIS_HOST=redis
-
-# Split hosts
-APP_URL=https://origynzapi.ddev.site   # the API's own URL
-FRONTEND_URL=https://origynz.ddev.site # SPA origin (drives CORS + email links)
 ```
 
-The SPA reads its API base URL from `web/.env.development` (`VITE_API_URL`).
-DDEV provides `DB_*`/`REDIS_*`; with settings management disabled they are kept in `.env`.
+The SPA reads `VITE_API_URL` from `web/.env.development`. It can be blank for normal DDEV use because nginx proxies `/api/` on the SPA host to Laravel.
 
-## Commands
+Social login providers are optional in local development, but production/provider testing needs the relevant `SOCIALITE_PROVIDERS`, client IDs, secrets, and redirect URIs.
+
+## Common Commands
 
 ```bash
-ddev composer test               # clear config, lint check, run PHPUnit
-ddev composer lint               # auto-fix code style with Pint
-ddev composer analyse            # PHPStan static analysis
-ddev exec 'cd web && npm run build'   # typecheck + production build the SPA
-ddev exec 'cd web && npx tsc --noEmit' # SPA typecheck only
+ddev composer setup              # PHP install, app key, migrations
+ddev composer lint               # Pint auto-format
+ddev composer test               # config clear, Pint check, Laravel tests
+ddev composer analyse            # PHPStan
+ddev exec 'cd web && npm run build' # SPA typecheck + production build
+ddev exec 'cd web && npm run lint'  # SPA typecheck only
 ```
+
+Outside DDEV, run frontend commands from `web/`; there is no root `package.json`.
 
 ## Testing
 
 ```bash
 ddev composer test
+ddev exec 'cd web && npm run build'
 ```
 
-Tests run against SQLite by default. The CI matrix covers PHP 8.3, 8.4, and 8.5.
+The Laravel test suite is API-focused and runs against SQLite by default. The SPA build runs `tsc -b` before `vite build`.
 
 ## CI
 
-GitHub Actions runs on push to `develop`, `main`, and `master`:
+GitHub Actions currently runs:
 
-- **Lint** — PHP Pint code style check
-- **Tests** — PHPUnit on PHP 8.3/8.4/8.5 with Node 22
-- **react-spa** — installs `web/` deps and typechecks + builds the SPA
+- `linter`: installs Composer dependencies and runs Pint.
+- `tests`: runs PHPUnit on PHP 8.3, 8.4, and 8.5.
+- `react-spa`: installs dependencies in `web/` and runs the SPA production build with Node 22.
 
-## Queue Worker
+Because the frontend package lives in `web/`, CI must use `working-directory: web` for npm steps.
 
-GEDCOM imports are processed asynchronously. Horizon must be running:
+## Deployment Notes
 
-```bash
-php artisan horizon
-# or via ddev composer dev (starts automatically)
-```
+Deploy the API and SPA as separate apps or services:
 
-## Deployment
+- API: Laravel app with `APP_URL` set to the API origin.
+- SPA: built output from `web/dist`.
+- Frontend config: set `FRONTEND_URL` on the API and provide the SPA with the correct API base URL or a reverse proxy for `/api/`.
+- Queue: run a Laravel queue worker for GEDCOM imports and background media downloads.
+
+For DDEV production-like serving, `.ddev/nginx_full/origynz-spa.conf` includes commented instructions for serving `web/dist` instead of proxying to Vite.
