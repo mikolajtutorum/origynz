@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Enums\SiteRole;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Console\Command;
-use App\Models\Role;
 
 class AssignSuperAdmin extends Command
 {
@@ -21,12 +21,13 @@ class AssignSuperAdmin extends Command
 
         if (! $user) {
             $this->error("No user found with email: {$email}");
+
             return self::FAILURE;
         }
 
         $role = Role::firstOrCreate([
-            'name'           => SiteRole::SuperAdmin->value,
-            'guard_name'     => 'web',
+            'name' => SiteRole::SuperAdmin->value,
+            'guard_name' => 'web',
             'family_tree_id' => 0,
         ]);
 
@@ -34,6 +35,7 @@ class AssignSuperAdmin extends Command
         $user->assignRole($role);
 
         $this->info("Super admin role assigned to {$user->name} ({$user->email}).");
+
         return self::SUCCESS;
     }
 }

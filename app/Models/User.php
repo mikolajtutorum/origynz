@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\SiteRole;
+use App\Support\Authorization\TreeAccessService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -12,9 +14,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\Onboard\Concerns\GetsOnboarded;
 use Spatie\Onboard\Concerns\Onboardable;
 use Spatie\Permission\Traits\HasRoles;
@@ -30,7 +34,7 @@ class User extends Authenticatable implements Onboardable
     {
         parent::boot();
         static::deleting(function (User $user) {
-            \Spatie\Activitylog\Models\Activity::where('causer_id', $user->id)
+            Activity::where('causer_id', $user->id)
                 ->where('causer_type', self::class)
                 ->delete();
         });
@@ -105,17 +109,17 @@ class User extends Authenticatable implements Onboardable
 
     public function isSuperAdmin(): bool
     {
-        $tables   = config('permission.table_names');
-        $columns  = config('permission.column_names');
-        $teamKey  = $columns['team_foreign_key'] ?? 'family_tree_id';
+        $tables = config('permission.table_names');
+        $columns = config('permission.column_names');
+        $teamKey = $columns['team_foreign_key'] ?? 'family_tree_id';
         $morphKey = $columns['model_morph_key'] ?? 'model_id';
 
-        return \Illuminate\Support\Facades\DB::table($tables['model_has_roles'].' as model_roles')
+        return DB::table($tables['model_has_roles'].' as model_roles')
             ->join($tables['roles'].' as roles', 'roles.id', '=', 'model_roles.role_id')
-            ->where('model_roles.'.$teamKey, \App\Support\Authorization\TreeAccessService::SITE_TEAM_ID)
+            ->where('model_roles.'.$teamKey, TreeAccessService::SITE_TEAM_ID)
             ->where('model_roles.model_type', self::class)
             ->where('model_roles.'.$morphKey, $this->getKey())
-            ->where('roles.name', \App\Enums\SiteRole::SuperAdmin->value)
+            ->where('roles.name', SiteRole::SuperAdmin->value)
             ->exists();
     }
 }

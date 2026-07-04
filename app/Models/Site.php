@@ -43,7 +43,7 @@ class Site extends Model
     {
         return self::firstOrCreate(
             ['user_id' => $user->id],
-            ['name'    => self::defaultNameFor($user)],
+            ['name' => self::defaultNameFor($user)],
         );
     }
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PersonSourceCitation extends Model
 {
     use HasUuids;
+
     protected $fillable = [
         'person_id',
         'source_id',

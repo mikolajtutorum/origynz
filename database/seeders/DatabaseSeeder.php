@@ -18,8 +18,8 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesAndPermissionsSeeder::class);
 
         $user = User::factory()->create([
-            'name'     => 'Mikolaj Florysiak',
-            'email'    => 'mikolajflorysiak1@gmail.com',
+            'name' => 'Mikolaj Florysiak',
+            'email' => 'mikolajflorysiak1@gmail.com',
             'password' => bcrypt('password'),
         ]);
 

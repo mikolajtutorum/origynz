@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Concerns\RecordsActivity;
-use Database\Factories\PersonFactory;
 use Carbon\CarbonInterface;
+use Database\Factories\PersonFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -93,11 +93,11 @@ class Person extends Model
     protected function casts(): array
     {
         return [
-            'birth_date'               => 'date',
-            'death_date'               => 'date',
-            'is_living'                => 'bool',
+            'birth_date' => 'date',
+            'death_date' => 'date',
+            'is_living' => 'bool',
             'exclude_from_global_tree' => 'bool',
-            'trust_score'              => 'integer',
+            'trust_score' => 'integer',
         ];
     }
 
@@ -272,7 +272,7 @@ class Person extends Model
         }
 
         if (preg_match('/(\d{1,4})\s*(B\.?C\.?E?\.?)/i', $value, $matches)) {
-            return $matches[1] . ' BCE';
+            return $matches[1].' BCE';
         }
 
         preg_match('/\b(\d{4})\b/', $value, $matches);

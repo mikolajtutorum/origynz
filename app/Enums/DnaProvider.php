@@ -5,21 +5,21 @@ namespace App\Enums;
 enum DnaProvider: string
 {
     case TwentyThreeAndMe = '23andme';
-    case AncestryDNA      = 'ancestrydna';
-    case FTDNA            = 'ftdna';
-    case MyHeritage       = 'myheritage';
-    case LivingDNA        = 'livingdna';
-    case Other            = 'other';
+    case AncestryDNA = 'ancestrydna';
+    case FTDNA = 'ftdna';
+    case MyHeritage = 'myheritage';
+    case LivingDNA = 'livingdna';
+    case Other = 'other';
 
     public function label(): string
     {
         return match ($this) {
             self::TwentyThreeAndMe => '23andMe',
-            self::AncestryDNA      => 'AncestryDNA',
-            self::FTDNA            => 'FamilyTreeDNA (FTDNA)',
-            self::MyHeritage       => 'MyHeritage DNA',
-            self::LivingDNA        => 'Living DNA',
-            self::Other            => 'Other',
+            self::AncestryDNA => 'AncestryDNA',
+            self::FTDNA => 'FamilyTreeDNA (FTDNA)',
+            self::MyHeritage => 'MyHeritage DNA',
+            self::LivingDNA => 'Living DNA',
+            self::Other => 'Other',
         };
     }
 

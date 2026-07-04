@@ -12,7 +12,7 @@ return new class extends Migration
             ->whereNull('subtype')
             ->where(function ($q) {
                 $q->whereNotNull('start_date')
-                  ->orWhereNotNull('start_date_text');
+                    ->orWhereNotNull('start_date_text');
             })
             ->update(['subtype' => 'married']);
     }

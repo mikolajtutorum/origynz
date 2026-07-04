@@ -6,8 +6,9 @@ use App\Models\Person;
 
 class FindAGraveService
 {
-    private const FAG_BASE  = 'https://www.findagrave.com/memorial';
-    private const BG_BASE   = 'https://billiongraves.com/grave';
+    private const FAG_BASE = 'https://www.findagrave.com/memorial';
+
+    private const BG_BASE = 'https://billiongraves.com/grave';
 
     // -------------------------------------------------------------------------
     // URL builders
@@ -35,7 +36,7 @@ class FindAGraveService
     {
         $params = array_filter([
             'firstname' => $person->given_name,
-            'lastname'  => $person->surname,
+            'lastname' => $person->surname,
             'birthyear' => $person->birth_date?->format('Y'),
             'deathyear' => $person->death_date?->format('Y'),
         ]);
@@ -47,7 +48,7 @@ class FindAGraveService
     {
         return 'https://billiongraves.com/search/results?'.http_build_query(array_filter([
             'first_name' => $person->given_name,
-            'last_name'  => $person->surname,
+            'last_name' => $person->surname,
         ]));
     }
 

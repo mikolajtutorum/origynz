@@ -8,11 +8,11 @@ use App\Enums\TreePermission;
 use App\Models\FamilyTree;
 use App\Models\FamilyTreeInvitation;
 use App\Models\FamilyTreeMembershipRequest;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Closure;
 use Illuminate\Support\Collection;
-use App\Models\Permission;
-use App\Models\Role;
 
 class TreeAccessService
 {

@@ -24,7 +24,7 @@ return new class extends Migration
                 continue;
             }
 
-            $siteName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+            $siteName = trim(($user->first_name ?? '').' '.($user->last_name ?? ''));
             if ($siteName === '') {
                 $siteName = $user->name;
             }
@@ -32,9 +32,9 @@ return new class extends Migration
 
             $siteId = (string) Str::uuid();
             DB::table('sites')->insert([
-                'id'         => $siteId,
-                'user_id'    => $userId,
-                'name'       => $siteName,
+                'id' => $siteId,
+                'user_id' => $userId,
+                'name' => $siteName,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum PhotoRequestStatus: string
 {
-    case Pending   = 'pending';
+    case Pending = 'pending';
     case Fulfilled = 'fulfilled';
-    case Closed    = 'closed';
+    case Closed = 'closed';
 }

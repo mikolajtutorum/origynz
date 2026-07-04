@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\Person;
-use App\Models\PersonRelationship;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class RelationshipCalculatorService
@@ -32,13 +30,13 @@ class RelationshipCalculatorService
         $graph = [];
 
         foreach ($rows as $row) {
-            $graph[$row->person_id][]         = ['id' => $row->related_person_id, 'label' => $this->forwardLabel($row->type)];
+            $graph[$row->person_id][] = ['id' => $row->related_person_id, 'label' => $this->forwardLabel($row->type)];
             $graph[$row->related_person_id][] = ['id' => $row->person_id,         'label' => $this->reverseLabel($row->type)];
         }
 
         // BFS
-        $visited  = [$from->id => true];
-        $queue    = [[$from->id, []]]; // [currentId, pathSoFar]
+        $visited = [$from->id => true];
+        $queue = [[$from->id, []]]; // [currentId, pathSoFar]
         $maxDepth = 20;
 
         while (! empty($queue)) {
@@ -50,7 +48,7 @@ class RelationshipCalculatorService
 
             foreach ($graph[$currentId] ?? [] as $edge) {
                 $neighbourId = $edge['id'];
-                $label       = $edge['label'];
+                $label = $edge['label'];
 
                 if (isset($visited[$neighbourId])) {
                     continue;
@@ -63,7 +61,7 @@ class RelationshipCalculatorService
                 }
 
                 $visited[$neighbourId] = true;
-                $queue[]               = [$neighbourId, $newPath];
+                $queue[] = [$neighbourId, $newPath];
             }
         }
 
@@ -76,9 +74,9 @@ class RelationshipCalculatorService
     {
         return match ($type) {
             'parent' => 'parent of',
-            'child'  => 'child of',
+            'child' => 'child of',
             'spouse' => 'spouse of',
-            default  => $type.' of',
+            default => $type.' of',
         };
     }
 
@@ -86,9 +84,9 @@ class RelationshipCalculatorService
     {
         return match ($type) {
             'parent' => 'child of',
-            'child'  => 'parent of',
+            'child' => 'parent of',
             'spouse' => 'spouse of',
-            default  => $type.' of',
+            default => $type.' of',
         };
     }
 

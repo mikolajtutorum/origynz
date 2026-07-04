@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\IntegrationProvider;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property IntegrationProvider $provider
  * @property string $access_token
  * @property string|null $refresh_token
- * @property \Carbon\Carbon|null $token_expires_at
+ * @property Carbon|null $token_expires_at
  * @property string|null $provider_user_id
  * @property string|null $provider_username
  * @property array<string, mixed>|null $provider_meta
@@ -38,11 +39,11 @@ class UserIntegration extends Model
     protected function casts(): array
     {
         return [
-            'provider'         => IntegrationProvider::class,
-            'access_token'     => 'encrypted',
-            'refresh_token'    => 'encrypted',
+            'provider' => IntegrationProvider::class,
+            'access_token' => 'encrypted',
+            'refresh_token' => 'encrypted',
             'token_expires_at' => 'datetime',
-            'provider_meta'    => 'array',
+            'provider_meta' => 'array',
         ];
     }
 

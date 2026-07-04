@@ -76,7 +76,7 @@ class TrustScoreService
             $score >= 80 => 'High',
             $score >= 50 => 'Medium',
             $score >= 20 => 'Low',
-            default      => 'Minimal',
+            default => 'Minimal',
         };
     }
 
@@ -89,7 +89,7 @@ class TrustScoreService
             $score >= 80 => 'bg-green-100 text-green-800',
             $score >= 50 => 'bg-yellow-100 text-yellow-800',
             $score >= 20 => 'bg-orange-100 text-orange-800',
-            default      => 'bg-red-100 text-red-800',
+            default => 'bg-red-100 text-red-800',
         };
     }
 }

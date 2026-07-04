@@ -8,7 +8,6 @@ use App\Jobs\ImportGedcomJob;
 use App\Models\FamilyTree;
 use App\Support\Authorization\TreeAccessService;
 use App\Support\Gedcom\GedcomExporter;
-use App\Support\Gedcom\GedcomImporter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

@@ -6,7 +6,6 @@ use App\Enums\MergeCandidateStatus;
 use App\Models\MergeCandidate;
 use App\Models\Person;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class DuplicateDetectionService
 {
@@ -63,10 +62,10 @@ class DuplicateDetectionService
                         $existing->update(['similarity_score' => $score]);
                     } else {
                         MergeCandidate::create([
-                            'person_a_id'      => $idA,
-                            'person_b_id'      => $idB,
+                            'person_a_id' => $idA,
+                            'person_b_id' => $idB,
                             'similarity_score' => $score,
-                            'status'           => MergeCandidateStatus::Pending,
+                            'status' => MergeCandidateStatus::Pending,
                         ]);
                         $created++;
                     }
@@ -98,10 +97,10 @@ class DuplicateDetectionService
             $diff = abs($yearA - $yearB);
             $score += match (true) {
                 $diff === 0 => 35,
-                $diff <= 2  => 25,
-                $diff <= 5  => 15,
+                $diff <= 2 => 25,
+                $diff <= 5 => 15,
                 $diff <= 10 => 5,
-                default     => 0,
+                default => 0,
             };
         }
 

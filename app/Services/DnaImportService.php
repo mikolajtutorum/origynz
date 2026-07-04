@@ -12,7 +12,8 @@ use Illuminate\Support\Str;
 class DnaImportService
 {
     private const HEADER_LINES_TO_SCAN = 40;
-    private const CHUNK_SIZE           = 8192; // bytes per fread pass when counting SNPs
+
+    private const CHUNK_SIZE = 8192; // bytes per fread pass when counting SNPs
 
     // -------------------------------------------------------------------------
     // Public API
@@ -23,10 +24,10 @@ class DnaImportService
      */
     public function import(User $user, UploadedFile $file, ?string $personId = null): DnaKit
     {
-        $disk       = config('integrations.dna.disk', 'local');
-        $prefix     = config('integrations.dna.path_prefix', 'dna-kits');
-        $fileName   = Str::uuid().'_'.preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
-        $path       = "{$prefix}/{$user->id}/{$fileName}";
+        $disk = config('integrations.dna.disk', 'local');
+        $prefix = config('integrations.dna.path_prefix', 'dna-kits');
+        $fileName = Str::uuid().'_'.preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
+        $path = "{$prefix}/{$user->id}/{$fileName}";
 
         Storage::disk($disk)->putFileAs(
             "{$prefix}/{$user->id}",
@@ -34,22 +35,22 @@ class DnaImportService
             $fileName,
         );
 
-        $headers   = $this->readHeaderLines($file->getRealPath());
-        $provider  = $this->detectProvider($headers);
-        $meta      = $this->extractMeta($headers, $provider);
-        $snpCount  = $this->countSnps($file->getRealPath(), $provider);
+        $headers = $this->readHeaderLines($file->getRealPath());
+        $provider = $this->detectProvider($headers);
+        $meta = $this->extractMeta($headers, $provider);
+        $snpCount = $this->countSnps($file->getRealPath(), $provider);
 
         return DnaKit::create([
-            'user_id'              => $user->id,
-            'person_id'            => $personId,
-            'provider'             => $provider,
-            'kit_name'             => $meta['kit_name'] ?? $file->getClientOriginalName(),
-            'file_path'            => $path,
-            'snp_count'            => $snpCount,
-            'haplogroup_y'         => $meta['haplogroup_y'] ?? null,
-            'haplogroup_mt'        => $meta['haplogroup_mt'] ?? null,
+            'user_id' => $user->id,
+            'person_id' => $personId,
+            'provider' => $provider,
+            'kit_name' => $meta['kit_name'] ?? $file->getClientOriginalName(),
+            'file_path' => $path,
+            'snp_count' => $snpCount,
+            'haplogroup_y' => $meta['haplogroup_y'] ?? null,
+            'haplogroup_mt' => $meta['haplogroup_mt'] ?? null,
             'ancestry_composition' => $meta['ancestry_composition'] ?? null,
-            'sample_date'          => $meta['sample_date'] ?? null,
+            'sample_date' => $meta['sample_date'] ?? null,
         ]);
     }
 
@@ -62,14 +63,14 @@ class DnaImportService
         $header = implode("\n", $headerLines);
 
         return match (true) {
-            str_contains($header, '23andMe')                              => DnaProvider::TwentyThreeAndMe,
-            str_contains($header, 'AncestryDNA')                         => DnaProvider::AncestryDNA,
+            str_contains($header, '23andMe') => DnaProvider::TwentyThreeAndMe,
+            str_contains($header, 'AncestryDNA') => DnaProvider::AncestryDNA,
             str_contains($header, 'Family Tree DNA') ||
-                str_contains($header, 'FTDNA')                           => DnaProvider::FTDNA,
-            str_contains($header, 'MyHeritage')                          => DnaProvider::MyHeritage,
+                str_contains($header, 'FTDNA') => DnaProvider::FTDNA,
+            str_contains($header, 'MyHeritage') => DnaProvider::MyHeritage,
             str_contains($header, 'Living DNA') ||
-                str_contains($header, 'LivingDNA')                       => DnaProvider::LivingDNA,
-            default                                                       => DnaProvider::Other,
+                str_contains($header, 'LivingDNA') => DnaProvider::LivingDNA,
+            default => DnaProvider::Other,
         };
     }
 
@@ -120,7 +121,7 @@ class DnaImportService
 
     private function countSnps(string $filePath, DnaProvider $provider): int
     {
-        $fh    = fopen($filePath, 'r');
+        $fh = fopen($filePath, 'r');
         $count = 0;
 
         while (! feof($fh)) {
@@ -150,8 +151,8 @@ class DnaImportService
     private function readHeaderLines(string $filePath): array
     {
         $lines = [];
-        $fh    = fopen($filePath, 'r');
-        $i     = 0;
+        $fh = fopen($filePath, 'r');
+        $i = 0;
 
         while (! feof($fh) && $i < self::HEADER_LINES_TO_SCAN) {
             $line = fgets($fh);

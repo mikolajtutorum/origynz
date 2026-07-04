@@ -10,12 +10,18 @@ use Illuminate\Database\Eloquent\Collection;
 
 class GlobalTreePedigreeService
 {
-    private const CARD_WIDTH   = 200;
-    private const CARD_HEIGHT  = 100;
-    private const SPOUSE_GAP   = 10;
-    private const UNIT_GAP     = 56;
-    private const ROW_SPACING  = 200;
-    private const TOP_PADDING  = 50;
+    private const CARD_WIDTH = 200;
+
+    private const CARD_HEIGHT = 100;
+
+    private const SPOUSE_GAP = 10;
+
+    private const UNIT_GAP = 56;
+
+    private const ROW_SPACING = 200;
+
+    private const TOP_PADDING = 50;
+
     private const LEFT_PADDING = 60;
 
     public function __construct(
@@ -77,9 +83,9 @@ class GlobalTreePedigreeService
      */
     private function buildMaps(Collection $relationships): array
     {
-        $parentsMap  = [];
+        $parentsMap = [];
         $childrenMap = [];
-        $spousesMap  = [];
+        $spousesMap = [];
 
         foreach ($relationships as $rel) {
             if ($rel->type === 'spouse') {
@@ -122,7 +128,7 @@ class GlobalTreePedigreeService
         int $generations,
         array $ownedTreeIds = []
     ): array {
-        $rootRow     = $generations;
+        $rootRow = $generations;
         $primaryRows = [$rootRow => [$focus->id]];
         $familyEdges = [];
 
@@ -155,12 +161,12 @@ class GlobalTreePedigreeService
 
         ksort($primaryRows);
 
-        $rows     = [];
+        $rows = [];
         $rowOrder = [];
 
         foreach ($primaryRows as $rowIndex => $personIds) {
             $rowItems = [];
-            $seen     = [];
+            $seen = [];
 
             foreach ($personIds as $personId) {
                 if (! $peopleById->has($personId) || isset($seen[$personId])) {
@@ -171,21 +177,21 @@ class GlobalTreePedigreeService
                     ? 'focus'
                     : ($rowIndex < $rootRow ? 'ancestor' : 'descendant');
 
-                $rowItems[]      = ['person_id' => $personId, 'role' => $role, 'linked_to' => null, 'is_primary' => true];
+                $rowItems[] = ['person_id' => $personId, 'role' => $role, 'linked_to' => null, 'is_primary' => true];
                 $seen[$personId] = true;
 
                 foreach ($spousesMap[$personId] ?? [] as $spouseId) {
                     if (! $peopleById->has($spouseId) || isset($seen[$spouseId])) {
                         continue;
                     }
-                    $rowItems[]       = ['person_id' => $spouseId, 'role' => 'spouse', 'linked_to' => $personId, 'is_primary' => false];
-                    $seen[$spouseId]  = true;
+                    $rowItems[] = ['person_id' => $spouseId, 'role' => 'spouse', 'linked_to' => $personId, 'is_primary' => false];
+                    $seen[$spouseId] = true;
                 }
             }
 
             if ($rowItems !== []) {
                 $rows[$rowIndex] = $rowItems;
-                $rowOrder[]      = $rowIndex;
+                $rowOrder[] = $rowIndex;
             }
         }
 
@@ -197,11 +203,11 @@ class GlobalTreePedigreeService
         $lp = self::LEFT_PADDING;
 
         // First pass — compute canvas width
-        $rowUnits       = [];
+        $rowUnits = [];
         $minCanvasWidth = 1360;
 
         foreach ($rowOrder as $rowIndex) {
-            $items          = $rows[$rowIndex];
+            $items = $rows[$rowIndex];
             $spouseByLinked = [];
             foreach ($items as $item) {
                 if (! $item['is_primary']) {
@@ -209,13 +215,13 @@ class GlobalTreePedigreeService
                 }
             }
 
-            $units     = [];
+            $units = [];
             $placedIds = [];
             foreach ($items as $item) {
                 if (! $item['is_primary']) {
                     continue;
                 }
-                $spouse  = $spouseByLinked[$item['person_id']] ?? null;
+                $spouse = $spouseByLinked[$item['person_id']] ?? null;
                 $units[] = ['primary' => $item, 'spouse' => $spouse];
                 $placedIds[] = $item['person_id'];
                 if ($spouse) {
@@ -229,21 +235,21 @@ class GlobalTreePedigreeService
             }
 
             $rowUnits[$rowIndex] = $units;
-            $numUnits            = count($units);
-            $totalUW             = array_sum(array_map(
+            $numUnits = count($units);
+            $totalUW = array_sum(array_map(
                 fn ($u) => $u['spouse'] ? ($cw * 2 + $sg) : $cw,
                 $units
             ));
-            $rowWidth       = ($lp * 2) + $totalUW + (max(0, $numUnits - 1) * $ug);
+            $rowWidth = ($lp * 2) + $totalUW + (max(0, $numUnits - 1) * $ug);
             $minCanvasWidth = max($minCanvasWidth, $rowWidth + 80);
         }
 
-        $canvasWidth     = $minCanvasWidth;
-        $nodes           = [];
-        $nodeMap         = [];
+        $canvasWidth = $minCanvasWidth;
+        $nodes = [];
+        $nodeMap = [];
         $primaryByPerson = [];
-        $spouseByPerson  = [];
-        $allXByPerson    = [];
+        $spouseByPerson = [];
+        $allXByPerson = [];
 
         // Second pass — place nodes
         foreach ($rowOrder as $visualRow => $rowIndex) {
@@ -257,6 +263,7 @@ class GlobalTreePedigreeService
                             $xs[] = $allXByPerson[$pid] + intdiv($cw, 2);
                         }
                     }
+
                     return $xs ? array_sum($xs) / count($xs) : null;
                 };
                 $xa = $avgX($ua);
@@ -270,21 +277,22 @@ class GlobalTreePedigreeService
                 if ($xb === null) {
                     return -1;
                 }
+
                 return $xa <=> $xb;
             });
 
-            $y          = $tp + ($visualRow * $rs);
-            $numUnits   = count($units);
+            $y = $tp + ($visualRow * $rs);
+            $numUnits = count($units);
             $unitWidths = array_map(fn ($u) => $u['spouse'] ? ($cw * 2 + $sg) : $cw, $units);
-            $totalUW    = array_sum($unitWidths);
+            $totalUW = array_sum($unitWidths);
             $availWidth = $canvasWidth - ($lp * 2);
 
             if ($numUnits <= 1) {
-                $gap         = 0;
+                $gap = 0;
                 $startOffset = max(0, intdiv($availWidth - ($unitWidths[0] ?? 0), 2));
             } else {
-                $gap         = max($ug, intdiv($availWidth - $totalUW, $numUnits - 1));
-                $rowTW       = $totalUW + $gap * ($numUnits - 1);
+                $gap = max($ug, intdiv($availWidth - $totalUW, $numUnits - 1));
+                $rowTW = $totalUW + $gap * ($numUnits - 1);
                 $startOffset = max(0, intdiv($availWidth - $rowTW, 2));
             }
 
@@ -292,24 +300,24 @@ class GlobalTreePedigreeService
 
             foreach ($units as $uIndex => $unit) {
                 $primary = $unit['primary'];
-                $person  = $peopleById[$primary['person_id']];
-                $x       = $curX;
-                $key     = "{$rowIndex}:{$person->id}:{$primary['role']}";
+                $person = $peopleById[$primary['person_id']];
+                $x = $curX;
+                $key = "{$rowIndex}:{$person->id}:{$primary['role']}";
 
-                $nodes[]                      = $this->makeNode($person, $x, $y, $person->id === $focus->id, $primary['role'], $ownedTreeIds);
-                $nodeMap[$key]                = ['x' => $x, 'y' => $y, 'person_id' => $person->id];
+                $nodes[] = $this->makeNode($person, $x, $y, $person->id === $focus->id, $primary['role'], $ownedTreeIds);
+                $nodeMap[$key] = ['x' => $x, 'y' => $y, 'person_id' => $person->id];
                 $primaryByPerson[$person->id] = $key;
-                $allXByPerson[$person->id]    = $x;
+                $allXByPerson[$person->id] = $x;
 
                 if ($unit['spouse']) {
-                    $sp       = $unit['spouse'];
+                    $sp = $unit['spouse'];
                     $spPerson = $peopleById[$sp['person_id']];
-                    $spX      = $x + $cw + $sg;
-                    $spKey    = "{$rowIndex}:{$spPerson->id}:spouse";
+                    $spX = $x + $cw + $sg;
+                    $spKey = "{$rowIndex}:{$spPerson->id}:spouse";
 
-                    $nodes[]                      = $this->makeNode($spPerson, $spX, $y, false, 'spouse', $ownedTreeIds);
-                    $nodeMap[$spKey]               = ['x' => $spX, 'y' => $y, 'person_id' => $spPerson->id];
-                    $allXByPerson[$spPerson->id]   = $spX;
+                    $nodes[] = $this->makeNode($spPerson, $spX, $y, false, 'spouse', $ownedTreeIds);
+                    $nodeMap[$spKey] = ['x' => $spX, 'y' => $y, 'person_id' => $spPerson->id];
+                    $allXByPerson[$spPerson->id] = $spX;
                     $spouseByPerson[$spPerson->id] = $spKey;
 
                     $curX += $cw + $sg;
@@ -320,7 +328,7 @@ class GlobalTreePedigreeService
         }
 
         // Parent–child lines
-        $lines        = [];
+        $lines = [];
         $childParents = [];
         foreach ($familyEdges as $edge) {
             $childParents[$edge['to']][] = $edge['from'];
@@ -332,36 +340,37 @@ class GlobalTreePedigreeService
                 continue;
             }
 
-            $childNode  = $nodeMap[$childKey];
-            $childTopX  = $childNode['x'] + intdiv($cw, 2);
-            $childTopY  = $childNode['y'];
-            $parentIds  = array_values(array_unique($parentIds));
+            $childNode = $nodeMap[$childKey];
+            $childTopX = $childNode['x'] + intdiv($cw, 2);
+            $childTopY = $childNode['y'];
+            $parentIds = array_values(array_unique($parentIds));
 
             if (count($parentIds) === 2) {
                 [$p1, $p2] = $parentIds;
-                $coupled   = in_array($p2, $spousesMap[$p1] ?? [], true)
+                $coupled = in_array($p2, $spousesMap[$p1] ?? [], true)
                           || in_array($p1, $spousesMap[$p2] ?? [], true);
 
                 if ($coupled && isset($allXByPerson[$p1], $allXByPerson[$p2])) {
-                    $anchorId  = isset($primaryByPerson[$p1]) ? $p1 : $p2;
+                    $anchorId = isset($primaryByPerson[$p1]) ? $p1 : $p2;
                     $anchorKey = $primaryByPerson[$anchorId] ?? $spouseByPerson[$anchorId] ?? null;
 
                     if ($anchorKey !== null) {
                         $anchorNode = $nodeMap[$anchorKey];
-                        $p1cx       = $allXByPerson[$p1] + intdiv($cw, 2);
-                        $p2cx       = $allXByPerson[$p2] + intdiv($cw, 2);
-                        $midX       = intdiv($p1cx + $p2cx, 2);
-                        $barY       = $anchorNode['y'] + self::CARD_HEIGHT;
+                        $p1cx = $allXByPerson[$p1] + intdiv($cw, 2);
+                        $p2cx = $allXByPerson[$p2] + intdiv($cw, 2);
+                        $midX = intdiv($p1cx + $p2cx, 2);
+                        $barY = $anchorNode['y'] + self::CARD_HEIGHT;
 
                         if ($p1cx !== $p2cx) {
                             $lines[] = [
-                                'type'   => 'family',
-                                'path'   => 'M ' . min($p1cx, $p2cx) . ' ' . $barY . ' H ' . max($p1cx, $p2cx),
+                                'type' => 'family',
+                                'path' => 'M '.min($p1cx, $p2cx).' '.$barY.' H '.max($p1cx, $p2cx),
                                 'stroke' => '#5a8aaa',
                             ];
                         }
 
                         $lines[] = $this->orthogonal($midX, $barY, $childTopX, $childTopY);
+
                         continue;
                     }
                 }
@@ -372,7 +381,7 @@ class GlobalTreePedigreeService
                 if ($parentKey === null) {
                     continue;
                 }
-                $pNode   = $nodeMap[$parentKey];
+                $pNode = $nodeMap[$parentKey];
                 $lines[] = $this->orthogonal(
                     $pNode['x'] + intdiv($cw, 2),
                     $pNode['y'] + self::CARD_HEIGHT,
@@ -395,21 +404,21 @@ class GlobalTreePedigreeService
                 if ($toNode['y'] !== $fromNode['y']) {
                     continue;
                 }
-                $pairKey = min($personId, $spouseId) . ':' . max($personId, $spouseId);
+                $pairKey = min($personId, $spouseId).':'.max($personId, $spouseId);
                 if (isset($drawnPairs[$pairKey])) {
                     continue;
                 }
                 $drawnPairs[$pairKey] = true;
 
-                $lineY  = $fromNode['y'] + 42;
-                $leftX  = min($fromNode['x'] + $cw, $toNode['x'] + $cw);
+                $lineY = $fromNode['y'] + 42;
+                $leftX = min($fromNode['x'] + $cw, $toNode['x'] + $cw);
                 $rightX = max($fromNode['x'], $toNode['x']);
                 if ($rightX <= $leftX) {
                     continue;
                 }
                 $lines[] = [
-                    'type'   => 'spouse',
-                    'path'   => 'M ' . $leftX . ' ' . $lineY . ' H ' . $rightX,
+                    'type' => 'spouse',
+                    'path' => 'M '.$leftX.' '.$lineY.' H '.$rightX,
                     'stroke' => '#b88a8a',
                 ];
             }
@@ -426,16 +435,16 @@ class GlobalTreePedigreeService
         $data = $this->privacy->buildDisplayData($person, $ownedTreeIds);
 
         return [
-            'id'          => $person->id,
-            'name'        => $data['display_name'],
-            'life_span'   => $data['is_private'] ? '' : ($data['life_span'] ?? ''),
+            'id' => $person->id,
+            'name' => $data['display_name'],
+            'life_span' => $data['is_private'] ? '' : ($data['life_span'] ?? ''),
             'birth_place' => $data['is_private'] ? '' : ($data['birth_place'] ?? ''),
-            'sex'         => $data['sex'],
-            'is_private'  => $data['is_private'],
-            'is_focus'    => $isFocus,
-            'role'        => $role,
-            'x'           => $x,
-            'y'           => $y,
+            'sex' => $data['sex'],
+            'is_private' => $data['is_private'],
+            'is_focus' => $isFocus,
+            'role' => $role,
+            'x' => $x,
+            'y' => $y,
         ];
     }
 
@@ -459,7 +468,7 @@ class GlobalTreePedigreeService
             ->get();
 
         $parentIds = [];
-        $childIds  = [];
+        $childIds = [];
         $spouseIds = [];
 
         foreach ($relationships as $rel) {
@@ -485,21 +494,21 @@ class GlobalTreePedigreeService
             }
         }
 
-        $familyIds    = array_unique(array_merge($parentIds, $childIds, $spouseIds));
+        $familyIds = array_unique(array_merge($parentIds, $childIds, $spouseIds));
         $loadedFamily = Person::whereIn('id', $familyIds)->get()->keyBy('id');
 
         $toMember = fn (string $id): array => [
-            'id'   => $id,
+            'id' => $id,
             'data' => $this->privacy->buildDisplayData($loadedFamily[$id], $ownedTreeIds),
         ];
 
         return [
-            'person'       => $person,
+            'person' => $person,
             'display_data' => $this->privacy->buildDisplayData($person, $ownedTreeIds),
-            'parents'      => array_map($toMember, array_values(array_unique($parentIds))),
-            'spouses'      => array_map($toMember, array_values(array_unique($spouseIds))),
-            'children'     => array_map($toMember, array_values(array_unique($childIds))),
-            'tree_name'    => $person->familyTree?->name ?? '',
+            'parents' => array_map($toMember, array_values(array_unique($parentIds))),
+            'spouses' => array_map($toMember, array_values(array_unique($spouseIds))),
+            'children' => array_map($toMember, array_values(array_unique($childIds))),
+            'tree_name' => $person->familyTree?->name ?? '',
         ];
     }
 
@@ -509,8 +518,8 @@ class GlobalTreePedigreeService
         $midY = intdiv($y1 + $y2, 2);
 
         return [
-            'type'   => 'family',
-            'path'   => "M {$x1} {$y1} V {$midY} H {$x2} V {$y2}",
+            'type' => 'family',
+            'path' => "M {$x1} {$y1} V {$midY} H {$x2} V {$y2}",
             'stroke' => '#5a8aaa',
         ];
     }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProfileClaimStatus;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property ProfileClaimStatus $status
  * @property string|null $message
  * @property string|null $reviewed_by
- * @property \Carbon\Carbon|null $reviewed_at
+ * @property Carbon|null $reviewed_at
  * @property-read User $user
  * @property-read Person $person
  * @property-read User|null $reviewer
@@ -35,7 +36,7 @@ class ProfileClaim extends Model
     protected function casts(): array
     {
         return [
-            'status'      => ProfileClaimStatus::class,
+            'status' => ProfileClaimStatus::class,
             'reviewed_at' => 'datetime',
         ];
     }

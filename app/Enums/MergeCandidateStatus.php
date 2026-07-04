@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum MergeCandidateStatus: string
 {
-    case Pending   = 'pending';
+    case Pending = 'pending';
     case Dismissed = 'dismissed';
-    case Merged    = 'merged';
+    case Merged = 'merged';
 }

@@ -28,7 +28,7 @@ class SuggestedConnectionService
             ->where('status', 'pending')
             ->where(function ($q) use ($userTreeIds): void {
                 $q->whereHas('personA', fn ($sq) => $sq->whereIn('family_tree_id', $userTreeIds))
-                  ->orWhereHas('personB', fn ($sq) => $sq->whereIn('family_tree_id', $userTreeIds));
+                    ->orWhereHas('personB', fn ($sq) => $sq->whereIn('family_tree_id', $userTreeIds));
             })
             ->with([
                 'personA.familyTree:id,name',

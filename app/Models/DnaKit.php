@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DnaProvider;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $haplogroup_y
  * @property string|null $haplogroup_mt
  * @property array<string, mixed>|null $ancestry_composition
- * @property \Carbon\Carbon|null $sample_date
+ * @property Carbon|null $sample_date
  * @property string|null $notes
  * @property-read User $user
  * @property-read Person|null $person
@@ -44,10 +45,10 @@ class DnaKit extends Model
     protected function casts(): array
     {
         return [
-            'provider'             => DnaProvider::class,
-            'snp_count'            => 'integer',
+            'provider' => DnaProvider::class,
+            'snp_count' => 'integer',
             'ancestry_composition' => 'array',
-            'sample_date'          => 'date',
+            'sample_date' => 'date',
         ];
     }
 

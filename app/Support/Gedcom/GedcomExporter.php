@@ -3,11 +3,9 @@
 namespace App\Support\Gedcom;
 
 use App\Models\FamilyTree;
-use App\Models\MediaItem;
 use App\Models\Person;
-use App\Models\PersonSourceCitation;
 use App\Models\PersonRelationship;
-use App\Models\Source;
+use App\Models\PersonSourceCitation;
 use Illuminate\Support\Collection;
 
 class GedcomExporter
@@ -18,7 +16,7 @@ class GedcomExporter
         $relationships = $tree->relationships()->orderBy('id')->get();
         $mediaItems = $tree->mediaItems()->orderBy('id')->get()->groupBy('person_id');
         $sources = $tree->sources()->orderBy('id')->get()->keyBy('id');
-        $citations = \App\Models\PersonSourceCitation::query()
+        $citations = PersonSourceCitation::query()
             ->whereIn('person_id', $people->keys())
             ->with('source')
             ->orderBy('id')

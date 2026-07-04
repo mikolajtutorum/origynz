@@ -26,9 +26,9 @@ class WikiTreeService
     public function login(string $email, string $password): array
     {
         $response = Http::asForm()->post($this->apiUrl, [
-            'action'          => 'login',
-            'email'           => $email,
-            'password'        => $password,
+            'action' => 'login',
+            'email' => $email,
+            'password' => $password,
             'doNotEncryptSig' => 1,
         ]);
 
@@ -39,9 +39,9 @@ class WikiTreeService
         }
 
         return [
-            'user_id'  => $data['userid'],
+            'user_id' => $data['userid'],
             'username' => $data['username'],
-            'token'    => $data['token'] ?? '',
+            'token' => $data['token'] ?? '',
         ];
     }
 
@@ -55,10 +55,10 @@ class WikiTreeService
     public function getProfile(UserIntegration $integration, string $wikitreeId): array
     {
         $response = Http::get($this->apiUrl, [
-            'action'  => 'getPerson',
-            'key'     => $wikitreeId,
-            'fields'  => 'Id,Name,FirstName,MiddleName,LastNameAtBirth,LastNameCurrent,Gender,BirthDate,DeathDate,BirthLocation,DeathLocation,Bio',
-            'token'   => $integration->access_token,
+            'action' => 'getPerson',
+            'key' => $wikitreeId,
+            'fields' => 'Id,Name,FirstName,MiddleName,LastNameAtBirth,LastNameCurrent,Gender,BirthDate,DeathDate,BirthLocation,DeathLocation,Bio',
+            'token' => $integration->access_token,
         ]);
 
         $response->throw();
@@ -75,9 +75,9 @@ class WikiTreeService
     public function searchPerson(UserIntegration $integration, Person $person): array
     {
         $response = Http::get($this->apiUrl, [
-            'action'     => 'searchPerson',
-            'q'          => trim("{$person->given_name} {$person->surname}"),
-            'token'      => $integration->access_token,
+            'action' => 'searchPerson',
+            'q' => trim("{$person->given_name} {$person->surname}"),
+            'token' => $integration->access_token,
             'maxResults' => 5,
         ]);
 
@@ -92,10 +92,10 @@ class WikiTreeService
     public function importIntoLocal(Person $person, array $wtProfile): void
     {
         $person->fill(array_filter([
-            'given_name'  => $person->given_name  ?: ($wtProfile['FirstName'] ?? null),
-            'surname'     => $person->surname      ?: ($wtProfile['LastNameAtBirth'] ?? null),
-            'birth_place' => $person->birth_place  ?: ($wtProfile['BirthLocation'] ?? null),
-            'death_place' => $person->death_place  ?: ($wtProfile['DeathLocation'] ?? null),
+            'given_name' => $person->given_name ?: ($wtProfile['FirstName'] ?? null),
+            'surname' => $person->surname ?: ($wtProfile['LastNameAtBirth'] ?? null),
+            'birth_place' => $person->birth_place ?: ($wtProfile['BirthLocation'] ?? null),
+            'death_place' => $person->death_place ?: ($wtProfile['DeathLocation'] ?? null),
             'wikitree_id' => $wtProfile['Name'] ?? null,
         ]))->save();
     }

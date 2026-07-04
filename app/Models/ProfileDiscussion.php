@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read User $user
  * @property-read Person $person
  * @property-read ProfileDiscussion|null $parent
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ProfileDiscussion> $replies
+ * @property-read Collection<int, ProfileDiscussion> $replies
  */
 class ProfileDiscussion extends Model
 {

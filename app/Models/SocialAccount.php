@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SocialAccount extends Model
 {
     use HasUuids;
+
     protected $fillable = [
         'user_id',
         'provider',

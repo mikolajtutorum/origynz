@@ -59,25 +59,25 @@ class GlobalTreePrivacyService
 
         if ($isPrivate) {
             return [
-                'id'             => $person->id,
-                'is_private'     => true,
-                'display_name'   => __('Private Person'),
-                'life_span'      => null,
-                'birth_place'    => null,
-                'sex'            => null,
-                'family_tree'    => $treeName,
+                'id' => $person->id,
+                'is_private' => true,
+                'display_name' => __('Private Person'),
+                'life_span' => null,
+                'birth_place' => null,
+                'sex' => null,
+                'family_tree' => $treeName,
                 'family_tree_id' => $person->family_tree_id,
             ];
         }
 
         return [
-            'id'             => $person->id,
-            'is_private'     => false,
-            'display_name'   => $person->display_name,
-            'life_span'      => $person->life_span,
-            'birth_place'    => $person->birth_place,
-            'sex'            => $person->sex,
-            'family_tree'    => $treeName,
+            'id' => $person->id,
+            'is_private' => false,
+            'display_name' => $person->display_name,
+            'life_span' => $person->life_span,
+            'birth_place' => $person->birth_place,
+            'sex' => $person->sex,
+            'family_tree' => $treeName,
             'family_tree_id' => $person->family_tree_id,
         ];
     }

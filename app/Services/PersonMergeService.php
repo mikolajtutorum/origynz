@@ -6,6 +6,9 @@ use App\Enums\MergeCandidateStatus;
 use App\Models\MergeCandidate;
 use App\Models\Person;
 use App\Models\PersonMerge;
+use App\Models\ProfileClaim;
+use App\Models\ProfileDiscussion;
+use App\Models\ProfileWatch;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -63,13 +66,13 @@ class PersonMergeService
             $absorbed->events()->update(['person_id' => $surviving->id]);
             $absorbed->sourceCitations()->update(['person_id' => $surviving->id]);
 
-            \App\Models\ProfileDiscussion::where('person_id', $absorbed->id)
+            ProfileDiscussion::where('person_id', $absorbed->id)
                 ->update(['person_id' => $surviving->id]);
 
-            \App\Models\ProfileWatch::where('person_id', $absorbed->id)
+            ProfileWatch::where('person_id', $absorbed->id)
                 ->update(['person_id' => $surviving->id]);
 
-            \App\Models\ProfileClaim::where('person_id', $absorbed->id)
+            ProfileClaim::where('person_id', $absorbed->id)
                 ->update(['person_id' => $surviving->id]);
 
             // Mark absorbed as merged
@@ -84,9 +87,9 @@ class PersonMergeService
             // Record the merge event
             PersonMerge::create([
                 'surviving_person_id' => $surviving->id,
-                'absorbed_person_id'  => $absorbed->id,
-                'merged_by_user_id'   => $actor->id,
-                'field_decisions'     => $decisions,
+                'absorbed_person_id' => $absorbed->id,
+                'merged_by_user_id' => $actor->id,
+                'field_decisions' => $decisions,
             ]);
         });
 
