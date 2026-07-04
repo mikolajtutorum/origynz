@@ -34,7 +34,7 @@ export function ProfileSection() {
   return (
     <form onSubmit={onSubmit} className="flex max-w-lg flex-col gap-4">
       <FormError message={error} />
-      {saved && <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">Profile saved.</p>}
+      {saved && <p className="o-alert-success">Profile saved.</p>}
       <TextField label="Display name" error={formState.errors.name?.message} {...register('name')} />
       <div className="grid grid-cols-2 gap-3">
         <TextField label="First name" {...register('first_name')} />

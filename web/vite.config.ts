@@ -18,10 +18,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     strictPort: true,
-    // Allow the DDEV proxy host (nginx forwards Host: origynz.ddev.site).
-    allowedHosts: ['.ddev.site'],
+    // DDEV share uses public tunnel hostnames, so the dev server must accept
+    // the Host header nginx forwards from ngrok/cloudflared.
+    allowedHosts: true,
     hmr: {
-      host: 'origynz.ddev.site',
       protocol: 'wss',
       clientPort: 443,
     },

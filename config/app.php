@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'frontend_url' => env('FRONTEND_URL', 'https://origynz.ddev.site'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -101,29 +103,29 @@ return [
 
     'locales' => [
         'en' => [
-            'flag'         => '🇬🇧',
-            'short'        => 'EN',
-            'label'        => 'English',
-            'native'       => 'English',
-            'direction'    => 'ltr',
-            'countries'    => [], // fallback — any country not matched by another locale
+            'flag' => '🇬🇧',
+            'short' => 'EN',
+            'label' => 'English',
+            'native' => 'English',
+            'direction' => 'ltr',
+            'countries' => [], // fallback — any country not matched by another locale
         ],
         'pl' => [
-            'flag'         => '🇵🇱',
-            'short'        => 'PL',
-            'label'        => 'Polski',
-            'native'       => 'Polski',
-            'direction'    => 'ltr',
-            'countries'    => ['PL'],
+            'flag' => '🇵🇱',
+            'short' => 'PL',
+            'label' => 'Polski',
+            'native' => 'Polski',
+            'direction' => 'ltr',
+            'countries' => ['PL'],
         ],
         'ar' => [
-            'flag'         => '🇸🇦',
-            'short'        => 'AR',
-            'label'        => 'العربية',
-            'native'       => 'Arabic',
-            'direction'    => 'rtl',
-            'countries'    => ['SA', 'AE', 'EG', 'IQ', 'JO', 'KW', 'LB', 'MA',
-                               'QA', 'SY', 'TN', 'YE', 'DZ', 'LY', 'SD', 'OM'],
+            'flag' => '🇸🇦',
+            'short' => 'AR',
+            'label' => 'العربية',
+            'native' => 'Arabic',
+            'direction' => 'rtl',
+            'countries' => ['SA', 'AE', 'EG', 'IQ', 'JO', 'KW', 'LB', 'MA',
+                'QA', 'SY', 'TN', 'YE', 'DZ', 'LY', 'SD', 'OM'],
         ],
     ],
 

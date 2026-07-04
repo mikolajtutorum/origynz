@@ -1,52 +1,161 @@
-@import url('https://fonts.bunny.net/css?family=instrument-sans:400,500,600');
+@import url('https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700|fraunces:400,500,600,700');
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: 'Instrument Sans', 'Segoe UI', Tahoma, Arial, ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', ui-serif, Georgia, 'Times New Roman', serif;
+
+  /* Origynz brand — deep evergreen (static, both themes) */
+  --color-brand-50: #f1f6f2;
+  --color-brand-100: #ddebe0;
+  --color-brand-200: #bcd7c4;
+  --color-brand-300: #90bba0;
+  --color-brand-400: #609c78;
+  --color-brand-500: #417f5a;
+  --color-brand-600: #2f6747;
+  --color-brand-700: #26533a;
+  --color-brand-800: #204330;
+  --color-brand-900: #1b3728;
+  --color-brand-950: #0e1f16;
+
+  /* Origynz accent — heritage copper (static, both themes) */
+  --color-copper-50: #fdf6ef;
+  --color-copper-100: #f9e8d7;
+  --color-copper-200: #f2ceac;
+  --color-copper-300: #e9ad79;
+  --color-copper-400: #df8a4b;
+  --color-copper-500: #d76f2d;
+  --color-copper-600: #c05620;
+  --color-copper-700: #9e421d;
+  --color-copper-800: #7f371e;
+  --color-copper-900: #672f1c;
+}
+
+/* Adaptive semantic tokens: utilities reference CSS variables that flip with
+   the `.dark` class on <html>, so the whole app re-themes at runtime. */
+@theme inline {
+  --color-paper: var(--o-paper);
+  --color-paper-deep: var(--o-paper-deep);
+  --color-surface: var(--o-surface);
+  --color-inset: var(--o-inset);
+  --color-elevated: var(--o-elevated);
+  --color-ink: var(--o-ink);
+  --color-ink-soft: var(--o-ink-soft);
+  --color-ink-muted: var(--o-ink-muted);
+  --color-line: var(--o-line);
+  --color-line-strong: var(--o-line-strong);
+  --color-fill: var(--o-fill);
+  --color-fill-faint: var(--o-fill-faint);
+  --color-fill-strong: var(--o-fill-strong);
+  --color-edge: var(--o-edge);
+  --color-edge-faint: var(--o-edge-faint);
+  --color-edge-strong: var(--o-edge-strong);
+  --color-accent: var(--o-accent);
+  --color-accent-strong: var(--o-accent-strong);
+  --color-accent-soft: var(--o-accent-soft);
+  --color-accent-edge: var(--o-accent-edge);
+  --color-danger: var(--o-danger);
+  --color-danger-strong: var(--o-danger-strong);
+  --color-danger-soft: var(--o-danger-soft);
 }
 
 @layer base {
+  /* Light — warm paper */
+  :root {
+    color-scheme: light;
+    --o-paper: #f6f4ee;
+    --o-paper-deep: #eae7dc;
+    --o-surface: #ffffff;
+    --o-inset: #faf9f5;
+    --o-elevated: #ffffff;
+    --o-ink: #21271f;
+    --o-ink-soft: #4c5248;
+    --o-ink-muted: #6d7268;
+    --o-line: #e6e3d8;
+    --o-line-strong: #d3cfc0;
+    --o-fill: rgba(33, 39, 31, 0.05);
+    --o-fill-faint: rgba(33, 39, 31, 0.025);
+    --o-fill-strong: rgba(33, 39, 31, 0.09);
+    --o-edge: rgba(33, 39, 31, 0.12);
+    --o-edge-faint: rgba(33, 39, 31, 0.06);
+    --o-edge-strong: rgba(33, 39, 31, 0.22);
+    --o-accent: #047857;
+    --o-accent-strong: #065f46;
+    --o-accent-soft: rgba(4, 120, 87, 0.09);
+    --o-accent-edge: rgba(4, 120, 87, 0.3);
+    --o-danger: #b3362b;
+    --o-danger-strong: #8c2f25;
+    --o-danger-soft: rgba(179, 54, 43, 0.08);
+    --o-dot: rgba(33, 39, 31, 0.07);
+    --o-scrollbar: #c9c5b6;
+    --o-selection: rgba(4, 120, 87, 0.18);
+    --o-card-shadow: 0 1px 2px rgba(33, 39, 31, 0.04), 0 12px 32px -20px rgba(33, 39, 31, 0.12);
+    --o-card-shadow-hover: 0 2px 4px rgba(33, 39, 31, 0.05), 0 20px 44px -20px rgba(33, 39, 31, 0.18), 0 0 40px -16px rgba(4, 120, 87, 0.15);
+    --o-tile-shadow: 0 1px 2px rgba(33, 39, 31, 0.04);
+    --o-pop-shadow: 0 0 0 1px rgba(33, 39, 31, 0.04), 0 8px 16px rgba(33, 39, 31, 0.08), 0 28px 60px -24px rgba(33, 39, 31, 0.35);
+  }
+
+  /* Dark — forest ink */
+  .dark {
+    color-scheme: dark;
+    --o-paper: #0b0f0c;
+    --o-paper-deep: #161c17;
+    --o-surface: #121813;
+    --o-inset: #0e130f;
+    --o-elevated: #161c17;
+    --o-ink: #ecf1ea;
+    --o-ink-soft: #c2cabd;
+    --o-ink-muted: #8b9588;
+    --o-line: #222a23;
+    --o-line-strong: #313b32;
+    --o-fill: rgba(255, 255, 255, 0.05);
+    --o-fill-faint: rgba(255, 255, 255, 0.02);
+    --o-fill-strong: rgba(255, 255, 255, 0.1);
+    --o-edge: rgba(255, 255, 255, 0.1);
+    --o-edge-faint: rgba(255, 255, 255, 0.05);
+    --o-edge-strong: rgba(255, 255, 255, 0.2);
+    --o-accent: #6ee7b7;
+    --o-accent-strong: #a7f3d0;
+    --o-accent-soft: rgba(52, 211, 153, 0.1);
+    --o-accent-edge: rgba(52, 211, 153, 0.3);
+    --o-danger: #fca5a5;
+    --o-danger-strong: #fecaca;
+    --o-danger-soft: rgba(248, 113, 113, 0.1);
+    --o-dot: rgba(255, 255, 255, 0.05);
+    --o-scrollbar: #2c352d;
+    --o-selection: rgba(52, 211, 153, 0.28);
+    --o-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 20px 40px -28px rgba(0, 0, 0, 0.6);
+    --o-card-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 0 1px rgba(52, 211, 153, 0.08), 0 24px 48px -24px rgba(0, 0, 0, 0.7), 0 0 40px -16px rgba(52, 211, 153, 0.25);
+    --o-tile-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    --o-pop-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 24px 48px -12px rgba(0, 0, 0, 0.8);
+  }
+
   html,
   body {
-    background-color: #efefef;
-    color: #474747;
+    background-color: var(--o-paper);
+    color: var(--o-ink);
   }
   body {
     font-family: 'Instrument Sans', 'Segoe UI', Tahoma, Arial, ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--o-selection);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--o-scrollbar) transparent;
   }
 }
 
-/* Ported verbatim from the original app's resources/css/app.css so the SPA
-   matches the genealogy design (two-row header, family cards, chart board). */
+/* ─────────────────────────────────────────────────────────────────
+   Tree workspace styling — preserved verbatim. The tree display
+   container (canvas, cards, connectors, person sidebar) must not
+   change; only the app chrome around it follows the new system.
+   ───────────────────────────────────────────────────────────────── */
 @layer components {
-  .workspace-user-avatar {
-    @apply flex h-9 w-9 items-center justify-center rounded-full bg-[#2b2b2b] text-xs font-semibold text-white;
-  }
-
-  .workspace-nav-link {
-    @apply cursor-default rounded-[6px] border border-[#dde1e6] px-4 py-2 text-[15px] text-[#5f6a74] transition-all duration-150;
-  }
-  a.workspace-nav-link:hover,
-  button.workspace-nav-link:hover {
-    @apply border-[#93c5fd] bg-[#eff6ff] text-[#2563eb];
-  }
-  .workspace-nav-link.is-active {
-    @apply border-[#93c5fd] bg-[#eff6ff] font-medium text-[#2563eb];
-  }
-  .workspace-nav-link.is-disabled {
-    @apply border-dashed opacity-40;
-  }
-
-  .workspace-topbar-btn {
-    @apply appearance-none rounded border border-white/30 bg-transparent px-2.5 py-0.5 text-[13px] text-white/80 transition-colors duration-150 hover:border-white/60 hover:bg-white/15 hover:text-white;
-  }
-  .workspace-topbar-icon-btn {
-    @apply cursor-default rounded border border-white/30 px-1.5 py-0.5 text-white/70 transition-colors duration-150 hover:border-white/60 hover:bg-white/20 hover:text-white;
-  }
-  .workspace-topbar-user {
-    @apply flex cursor-default items-center gap-2 rounded border border-white/30 px-2 py-0.5 transition-colors duration-150 hover:border-white/50 hover:bg-white/10;
-  }
-
   .workspace-section-title {
     @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6f7b83];
   }
@@ -242,39 +351,369 @@
   .workspace-list-card {
     @apply rounded-xl border border-[#ececec] bg-[#fafafa] px-3.5 py-3 text-[13px];
   }
+}
 
-  /* ── Media browser ── */
-  .genealogy-shell {
-    @apply mx-auto w-full max-w-7xl;
+/* ─────────────────────────────────────────────────────────────────
+   Origynz design system — 2026 product shell (light & dark)
+   Warm-paper light theme / forest-ink dark theme over one set of
+   semantic tokens. The tree canvas above is constant in both.
+   ───────────────────────────────────────────────────────────────── */
+@layer components {
+  .o-shell {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
-  .media-browser-shell {
-    display: grid;
-    grid-template-columns: 235px minmax(0, 1fr);
-    background: #fff;
-    min-height: calc(100vh - 200px);
-    border: 1px solid #ececec;
-    border-radius: 0.75rem;
+
+  .o-page {
+    @apply mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10;
+  }
+
+  .o-display {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 40;
+    @apply font-semibold tracking-tight text-ink;
+  }
+
+  .o-eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-accent;
+  }
+
+  .o-card {
+    @apply rounded-2xl border border-line bg-surface;
+    box-shadow: var(--o-card-shadow);
+  }
+
+  .o-card-hover {
+    @apply transition duration-200 hover:-translate-y-0.5 hover:border-accent-edge;
+  }
+
+  .o-card-hover:hover {
+    box-shadow: var(--o-card-shadow-hover);
+  }
+
+  .o-pop {
+    box-shadow: var(--o-pop-shadow);
+  }
+
+  /* Buttons */
+  .o-btn,
+  .o-btn-primary,
+  .o-btn-secondary,
+  .o-btn-ghost,
+  .o-btn-copper,
+  .o-btn-danger,
+  .o-btn-danger-soft {
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .o-btn-sm {
+    @apply min-h-9 px-4 text-[13px];
+  }
+
+  .o-btn-primary {
+    @apply bg-emerald-400 text-emerald-950 hover:bg-emerald-300;
+    box-shadow: 0 0 24px -8px rgba(52, 211, 153, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+
+  .o-btn-secondary {
+    @apply border border-edge bg-fill text-ink hover:border-edge-strong hover:bg-fill-strong;
+  }
+
+  .o-btn-ghost {
+    @apply text-ink-soft hover:bg-fill hover:text-ink;
+  }
+
+  .o-btn-copper {
+    @apply bg-copper-400 text-copper-900 hover:bg-copper-300;
+  }
+
+  .o-btn-danger {
+    @apply bg-red-500/90 text-white hover:bg-red-500;
+  }
+
+  .o-btn-danger-soft {
+    @apply border border-danger/30 bg-danger-soft text-danger hover:border-danger/50;
+  }
+
+  /* Chips */
+  .o-chip,
+  .o-chip-brand,
+  .o-chip-copper,
+  .o-chip-muted,
+  .o-chip-danger {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold;
+  }
+
+  .o-chip-brand {
+    @apply bg-accent-soft text-accent;
+  }
+
+  .o-chip-copper {
+    @apply bg-copper-400/10 text-copper-700 dark:text-copper-300;
+  }
+
+  .o-chip-muted {
+    @apply border border-edge-faint bg-fill text-ink-soft;
+  }
+
+  .o-chip-danger {
+    @apply bg-danger-soft text-danger;
+  }
+
+  /* Forms */
+  .o-label {
+    @apply block text-[13px] font-medium text-ink-soft;
+  }
+
+  .o-input {
+    @apply w-full rounded-xl border border-edge bg-fill px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink-muted/80 focus:border-emerald-500/60 focus:ring-4 focus:ring-emerald-500/10;
+  }
+
+  select.o-input {
+    @apply pr-9;
+  }
+
+  select.o-input option {
+    @apply bg-elevated text-ink;
+  }
+
+  .o-alert-success {
+    @apply rounded-xl border border-accent-edge bg-accent-soft px-4 py-3 text-sm text-accent;
+  }
+
+  .o-alert-error {
+    @apply rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger;
+  }
+
+  .o-empty {
+    @apply rounded-2xl border border-dashed border-edge bg-fill-faint px-6 py-10 text-center text-sm leading-6 text-ink-muted;
+  }
+
+  .o-table {
+    @apply w-full border-collapse text-left text-sm;
+  }
+
+  .o-table thead th {
+    @apply border-b border-line px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted;
+  }
+
+  .o-table tbody td {
+    @apply border-b border-line/60 px-4 py-3.5 align-middle text-ink-soft;
+  }
+
+  .o-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .o-table tbody tr {
+    @apply transition-colors hover:bg-fill-faint;
+  }
+
+  /* App shell: sidebar + topbar + bottom tabs */
+  .o-sidebar {
+    @apply sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line bg-inset lg:flex;
+  }
+
+  .o-side-link {
+    @apply flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-ink-soft transition hover:bg-fill hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500;
+  }
+
+  .o-side-link.is-active {
+    @apply bg-accent-soft text-accent;
+  }
+
+  .o-side-link.is-active .o-side-icon {
+    @apply text-accent;
+  }
+
+  .o-side-icon {
+    @apply h-[18px] w-[18px] shrink-0 text-ink-muted transition-colors;
+  }
+
+  .o-side-heading {
+    @apply px-3 pb-1.5 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-muted/80;
+  }
+
+  .o-topbar {
+    @apply sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-line bg-paper/80 px-4 backdrop-blur-md sm:px-6;
+  }
+
+  .o-search-btn {
+    @apply flex min-h-9 items-center gap-2.5 rounded-full border border-edge bg-fill px-3.5 text-[13px] text-ink-muted transition hover:border-edge-strong hover:bg-fill-strong hover:text-ink-soft;
+  }
+
+  .o-kbd {
+    @apply rounded-md border border-edge bg-fill px-1.5 py-0.5 font-mono text-[10px] text-ink-muted;
+  }
+
+  .o-tabbar {
+    @apply fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-inset/92 backdrop-blur-md lg:hidden;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .o-tab {
+    @apply flex flex-1 flex-col items-center gap-1 pb-2 pt-2.5 text-[10px] font-medium text-ink-muted transition;
+  }
+
+  .o-tab.is-active {
+    @apply text-accent;
+  }
+
+  /* Menus / palette */
+  .o-menu {
+    @apply absolute top-full z-50 mt-2 min-w-[230px] overflow-hidden rounded-2xl border border-edge bg-elevated py-1.5;
+    box-shadow: var(--o-pop-shadow);
+  }
+
+  .o-menu-item {
+    @apply flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-ink-soft transition-colors hover:bg-fill hover:text-ink;
+  }
+
+  .o-menu-item.is-current {
+    @apply bg-accent-soft font-semibold text-accent;
+  }
+
+  .o-menu-heading {
+    @apply px-4 pb-1 pt-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-muted;
+  }
+
+  .o-menu-divider {
+    @apply my-1.5 border-t border-edge;
+  }
+
+  .o-avatar {
+    @apply flex shrink-0 items-center justify-center rounded-full bg-emerald-500 font-semibold text-emerald-950;
+  }
+
+  /* Stat / bento tiles */
+  .o-stat {
+    @apply relative overflow-hidden rounded-2xl border border-line bg-surface p-5;
+    box-shadow: var(--o-tile-shadow);
+  }
+
+  .o-stat-value {
+    font-family: var(--font-display);
+    @apply mt-1 text-3xl font-semibold text-ink;
+  }
+
+  .o-stat-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted;
+  }
+
+  /* Pill sub-navigation */
+  .o-subnav {
+    @apply flex flex-wrap items-center gap-1.5;
+  }
+
+  .o-subnav-link {
+    @apply inline-flex min-h-10 cursor-pointer items-center rounded-full px-4 text-sm font-medium text-ink-muted transition hover:bg-fill hover:text-ink;
+  }
+
+  .o-subnav-link.is-active {
+    @apply bg-emerald-400 text-emerald-950 hover:bg-emerald-300 hover:text-emerald-950;
+  }
+
+  /* Ambient helpers */
+  .o-dotgrid {
+    background-image: radial-gradient(var(--o-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}
+
+@layer utilities {
+  @keyframes o-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .o-rise {
+    animation: o-rise 0.45s cubic-bezier(0.21, 0.6, 0.35, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .o-rise {
+      animation: none;
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Tree canvas — mobile touch ergonomics. Additive overrides for
+   coarse pointers / small screens only; desktop stays unchanged.
+   ───────────────────────────────────────────────────────────────── */
+@layer components {
+  @media (pointer: coarse), (max-width: 1023px) {
+    .gen-add-tab {
+      height: 30px;
+      width: 46px;
+      font-size: 22px;
+      transform: translate(-50%, 42%);
+    }
+
+    .gen-dots {
+      padding: 8px 10px;
+      gap: 5px;
+    }
+
+    .gen-pill {
+      height: 10px;
+      width: 16px;
+    }
+
+    .gen-side {
+      height: 32px;
+      width: 32px;
+    }
+
+    /* The pencil glyph is a hover affordance; on touch the card opens the
+       person sheet, which carries the Edit action. */
+    .gen-card-edit {
+      display: none;
+    }
+  }
+}
+
+/* Portrait person cards (mobile) — photo on top, centred name and year,
+   MyHeritage-app style. Activated by TreeCanvas via data-portrait. */
+@layer components {
+  .gen-card[data-portrait] {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 16px 10px 12px;
+    border-radius: 18px;
+    text-align: center;
+  }
+
+  .gen-card[data-portrait] .gen-card-avatar {
+    height: 64px;
+    width: 64px;
+    font-size: 18px;
+  }
+
+  .gen-card[data-portrait] > span.min-w-0 {
+    flex: 0 1 auto;
+    width: 100%;
+  }
+
+  .gen-card[data-portrait] .gen-card-name {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-  }
-  .media-browser-side-link {
-    @apply flex items-center gap-3 border-b border-[#ececec] px-6 py-5 text-[15px] text-[#5f6368] transition-colors;
-  }
-  .media-browser-side-link.is-active,
-  .media-browser-side-link:hover {
-    @apply bg-[#eff6ff] text-[#2563eb];
-  }
-  .media-browser-content {
-    @apply min-w-0 p-7;
-  }
-  .media-library-grid {
-    display: grid;
-    gap: 1.25rem;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    align-items: start;
+    font-size: 13.5px;
+    line-height: 1.25;
   }
 
-  /* ── Settings ── */
-  .settings-heading {
-    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-[#6f7b83];
+  .gen-card[data-portrait] .gen-card-dates {
+    margin-top: 3px;
+    font-size: 12.5px;
   }
 }

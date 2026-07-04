@@ -69,8 +69,8 @@ function ConnectModal({ treeId, person, onClose }: { treeId: string; person: Per
     <Modal title="Connect to existing person" onClose={onClose}>
       <div className="flex flex-col gap-3">
         <FormError message={error} />
-        <p className="text-sm text-neutral-500">
-          Link <span className="font-medium text-neutral-800">{person.display_name}</span> to another person already in this tree.
+        <p className="text-sm text-ink-soft">
+          Link <span className="font-medium text-ink">{person.display_name}</span> to another person already in this tree.
         </p>
         <Select label="Relationship" value={type} onChange={(e) => setType(e.target.value as RelationshipType)}>
           <option value="parent">Is a parent of…</option>
@@ -150,7 +150,7 @@ function HomePersonModal({
     <Modal title="Which person is you?" onClose={onClose}>
       <div className="flex flex-col gap-3">
         <FormError message={error} />
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-ink-soft">
           We couldn&apos;t tell which person in this file is you. Pick yourself (or whoever the tree should centre on) to
           set the home person.
         </p>
@@ -176,6 +176,10 @@ export function TreeWorkspace() {
   // Add-relative flow: pick a relative kind in the radial overlay (role: null),
   // then fill in the add-person form (role set).
   const [relativeFlow, setRelativeFlow] = useState<{ anchorId: string; role: RelationRole | null } | null>(null);
+  // Bumped on every card tap so the mobile profile re-opens even when the
+  // same person is tapped again. Must live above the early returns: hooks
+  // may not render conditionally.
+  const [selectTick, setSelectTick] = useState(0);
   // Set by the GEDCOM import flow when it couldn't auto-detect the home person.
   const [chooseHome, setChooseHome] = useState<boolean>(
     () => Boolean((location.state as { chooseHome?: boolean } | null)?.chooseHome),
@@ -226,9 +230,12 @@ export function TreeWorkspace() {
     setSelectedId(personId);
   };
 
-  // Clicking a card only opens the person in the left sidebar — it never moves
-  // the tree or opens other cards.
-  const select = (personId: string) => setSelectedId(personId);
+  // Clicking a card only opens the person in the sidebar (full-screen profile
+  // on mobile) — it never moves the tree.
+  const select = (personId: string) => {
+    setSelectedId(personId);
+    setSelectTick((t) => t + 1);
+  };
 
   // Clear the one-shot import flag so it doesn't reopen on back/refresh.
   const dismissChooseHome = () => {
@@ -296,6 +303,9 @@ export function TreeWorkspace() {
           <PersonPanel
             person={selectedPerson}
             family={family}
+            graph={graph}
+            homePersonId={data.owner_person_id}
+            openSignal={selectTick}
             isOwner={selectedPerson.id === data.owner_person_id}
             canManage={data.can_manage}
             showInteractions={data.tree.global_tree_enabled}
@@ -313,14 +323,25 @@ export function TreeWorkspace() {
         )}
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="flex items-center justify-between border-b border-[#e2e2e2] bg-white px-8 py-4">
-            <div>
-              <Link to="/trees" className="text-[13px] text-[#68727b] hover:text-[#2563eb]">
+          {/* Compact on mobile (single MyHeritage-style row) to give the canvas
+              as much vertical space as possible; roomier on desktop. */}
+          <div className="flex items-center gap-1.5 border-b border-[#e2e2e2] bg-white px-2 py-1.5 lg:justify-between lg:gap-3 lg:px-8 lg:py-4">
+            <Link
+              to="/trees"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#68727b] hover:bg-[#f3f5f7] hover:text-[#2563eb] lg:hidden"
+              aria-label="All trees"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5m7-7-7 7 7 7" />
+              </svg>
+            </Link>
+            <div className="min-w-0 flex-1 lg:flex-initial">
+              <Link to="/trees" className="hidden text-[13px] text-[#68727b] hover:text-[#2563eb] lg:inline">
                 ← All trees
               </Link>
-              <h1 className="text-[20px] font-semibold text-[#1f252b]">{data.tree.name}</h1>
-              <p className="text-[13px] text-[#68727b]">
-                {data.people.length} people · your role: {data.access_level}
+              <h1 className="truncate text-[15px] font-semibold leading-tight text-[#1f252b] lg:text-[20px]">{data.tree.name}</h1>
+              <p className="truncate text-[11px] leading-tight text-[#68727b] lg:text-[13px]">
+                {data.people.length} people<span className="max-lg:hidden"> · your role: {data.access_level}</span>
               </p>
             </div>
             {data.can_manage && (
@@ -329,9 +350,15 @@ export function TreeWorkspace() {
                   const blob = await getBlob(gedcomApi.exportPath(data.tree.id));
                   downloadBlob(blob, `${data.tree.name}.ged`);
                 }}
-                className="rounded-md border border-[#d4dae1] px-4 py-2 text-sm font-medium text-[#1f252b] hover:bg-[#f7f9fb]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#1f252b] hover:bg-[#f7f9fb] lg:h-auto lg:w-auto lg:gap-2 lg:rounded-md lg:border lg:border-[#d4dae1] lg:px-4 lg:py-2 lg:text-sm lg:font-medium"
+                aria-label="Export GEDCOM"
               >
-                Export GEDCOM
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3v12" />
+                  <path d="m7 10 5 5 5-5" />
+                  <path d="M5 21h14" />
+                </svg>
+                <span className="max-lg:hidden">Export GEDCOM</span>
               </button>
             )}
           </div>

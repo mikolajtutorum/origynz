@@ -34,48 +34,56 @@ export function InteractionPanel({ person }: { person: Person }) {
   });
 
   return (
-    <div className="mt-4 border-t border-neutral-200 pt-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-700">Community</h3>
+    <div>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-muted/80">Discussion</p>
         <button
           onClick={() => toggleWatch.mutate()}
-          className="rounded-md border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50"
+          className={`o-btn-sm inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-[11px] font-semibold transition ${
+            watching
+              ? 'border-accent-edge bg-accent-soft text-accent'
+              : 'border-edge bg-fill text-ink-soft hover:border-edge-strong hover:text-ink'
+          }`}
         >
-          {watching === null ? 'Watch' : watching ? '★ Watching' : 'Watch'}
+          <svg className="h-3 w-3" viewBox="0 0 24 24" fill={watching ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+            <path d="m12 3 2.7 5.6 6.3.8-4.6 4.3 1.2 6.1L12 16.9 6.4 19.8l1.2-6.1L3 9.4l6.3-.8L12 3Z" />
+          </svg>
+          {watching ? 'Watching' : 'Watch'}
         </button>
       </div>
 
-      <ul className="mb-3 flex max-h-40 flex-col gap-2 overflow-auto">
+      <ul className="flex flex-col gap-2">
         {discussions?.length ? (
           discussions.map((d) => (
-            <li key={d.id} className="rounded-md bg-neutral-50 px-2 py-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="font-medium text-neutral-700">{d.author}</span>
+            <li key={d.id} className="rounded-xl border border-line bg-fill-faint px-3 py-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-[11px] font-semibold text-accent">{d.author}</span>
                 {d.can_delete && (
-                  <button onClick={() => remove.mutate(d.id)} className="text-neutral-400 hover:text-red-600">
+                  <button onClick={() => remove.mutate(d.id)} className="text-ink-muted transition hover:text-danger" aria-label="Delete comment">
                     ✕
                   </button>
                 )}
               </div>
-              <p className="text-neutral-600">{d.body}</p>
+              <p className="mt-1 text-[12.5px] leading-5 text-ink-soft">{d.body}</p>
             </li>
           ))
         ) : (
-          <li className="text-xs text-neutral-400">No comments yet.</li>
+          <li className="text-[12.5px] text-ink-muted">No comments yet — start the discussion.</li>
         )}
       </ul>
 
-      <div className="flex gap-2">
+      <div className="mt-3 flex gap-2">
         <input
           value={comment}
           onChange={(e) => setComment(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && comment.trim() && post.mutate()}
           placeholder="Add a comment…"
-          className="min-w-0 flex-1 rounded-md border border-neutral-300 px-2 py-1 text-xs"
+          className="o-input min-w-0 flex-1 px-3 py-2 text-[12.5px]"
         />
         <button
           onClick={() => comment.trim() && post.mutate()}
           disabled={post.isPending}
-          className="rounded-md bg-neutral-900 px-3 py-1 text-xs text-white disabled:opacity-50"
+          className="o-btn-primary o-btn-sm shrink-0"
         >
           Post
         </button>

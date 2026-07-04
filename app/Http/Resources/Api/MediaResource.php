@@ -39,9 +39,14 @@ class MediaResource extends JsonResource
 
     private function signedFileUrl(string $mode): string
     {
-        return URL::temporarySignedRoute('api.media.file', now()->addHours(6), [
+        $url = URL::temporarySignedRoute('api.media.file', now()->addHours(6), [
             'mediaItem' => $this->id,
             'mode' => $mode,
         ]);
+
+        // Host-relative so clients fetch it same-origin (works through the SPA
+        // proxy, tunnels, and LAN). The signature stays valid because the proxy
+        // pins the Host header to the URL's original host.
+        return parse_url($url, PHP_URL_PATH).'?'.parse_url($url, PHP_URL_QUERY);
     }
 }

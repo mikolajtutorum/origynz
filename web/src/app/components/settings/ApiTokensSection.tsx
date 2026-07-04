@@ -41,8 +41,8 @@ export function ApiTokensSection() {
 
   return (
     <div className="flex max-w-2xl flex-col gap-5">
-      <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 p-4">
-        <h3 className="font-medium text-neutral-900">Create API token</h3>
+      <div className="flex flex-col gap-3 rounded-xl border border-line p-4">
+        <h3 className="font-medium text-ink">Create API token</h3>
         <FormError message={error} />
         <TextField label="Token name" value={name} onChange={(e) => setName(e.target.value)} />
         <div className="flex gap-4 text-sm">
@@ -59,28 +59,28 @@ export function ApiTokensSection() {
           </Button>
         </div>
         {plainToken && (
-          <div className="rounded-md bg-amber-50 p-3 text-sm">
-            <p className="mb-1 font-medium text-amber-800">Copy this token now — it won't be shown again:</p>
+          <div className="rounded-2xl border border-copper-400/25 bg-copper-400/10 p-4 text-sm">
+            <p className="mb-1 font-medium text-copper-800 dark:text-copper-200">Copy this token now — it won't be shown again:</p>
             <code className="block break-all font-mono text-xs text-amber-900">{plainToken}</code>
           </div>
         )}
       </div>
 
       <div>
-        <h3 className="mb-2 font-medium text-neutral-900">Active tokens</h3>
+        <h3 className="mb-2 font-medium text-ink">Active tokens</h3>
         {tokens.length === 0 ? (
-          <p className="text-sm text-neutral-500">No tokens yet.</p>
+          <p className="text-sm text-ink-muted">No tokens yet.</p>
         ) : (
-          <ul className="divide-y divide-neutral-200 rounded-xl border border-neutral-200">
+          <ul className="divide-y divide-line/70 rounded-xl border border-line">
             {tokens.map((t) => (
               <li key={t.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-neutral-900">{t.name}</p>
-                  <p className="text-xs text-neutral-400">
+                  <p className="text-sm font-medium text-ink">{t.name}</p>
+                  <p className="text-xs text-ink-muted">
                     {(t.abilities ?? []).join(', ') || '—'} · last used {t.last_used_at ?? 'never'}
                   </p>
                 </div>
-                <button onClick={() => revoke(t.id)} className="text-sm text-red-600 hover:underline">
+                <button onClick={() => revoke(t.id)} className="text-sm font-medium text-danger hover:text-danger-strong hover:underline">
                   Revoke
                 </button>
               </li>

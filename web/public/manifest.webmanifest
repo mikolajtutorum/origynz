@@ -1,0 +1,14 @@
+{
+  "name": "Origynz — Family Tree",
+  "short_name": "Origynz",
+  "description": "Build living family trees, preserve photos and records, and map every relationship.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0f0c",
+  "theme_color": "#0b0f0c",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

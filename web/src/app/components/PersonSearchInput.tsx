@@ -43,16 +43,16 @@ export function PersonSearchInput({
 
   if (selected) {
     return (
-      <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-700">{label}</span>
-        <div className="flex items-center justify-between rounded-md border border-neutral-300 px-3 py-2 text-sm">
+      <div className="flex flex-col gap-1.5">
+        <span className="o-label">{label}</span>
+        <div className="flex items-center justify-between rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-ink">
           <span>
             {selected.display_name}
-            {selected.life_span ? <span className="text-neutral-400"> · {selected.life_span}</span> : null}
+            {selected.life_span ? <span className="text-ink-muted"> · {selected.life_span}</span> : null}
           </span>
           <button
             type="button"
-            className="text-neutral-400 hover:text-neutral-700"
+            className="text-ink-muted transition hover:text-ink"
             onClick={() => {
               onSelect(null);
               setQuery('');
@@ -66,28 +66,28 @@ export function PersonSearchInput({
   }
 
   return (
-    <div className="relative flex flex-col gap-1">
-      <label className="text-sm font-medium text-neutral-700">{label}</label>
+    <div className="relative flex flex-col gap-1.5">
+      <label className="o-label">{label}</label>
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search people…"
-        className="rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-200"
+        className="o-input"
       />
       {open && results.length > 0 && (
-        <ul className="absolute top-full z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-neutral-200 bg-white shadow-lg">
+        <ul className="absolute top-full z-10 mt-2 max-h-56 w-full overflow-auto rounded-2xl border border-line bg-surface py-1 o-pop">
           {results.map((p) => (
             <li key={p.id}>
               <button
                 type="button"
-                className="block w-full px-3 py-2 text-left text-sm hover:bg-neutral-100"
+                className="block w-full px-3.5 py-2.5 text-left text-sm text-ink-soft transition-colors hover:bg-fill hover:text-accent"
                 onClick={() => {
                   onSelect(p);
                   setOpen(false);
                 }}
               >
                 {p.display_name}
-                {p.life_span ? <span className="text-neutral-400"> · {p.life_span}</span> : null}
+                {p.life_span ? <span className="text-ink-muted"> · {p.life_span}</span> : null}
               </button>
             </li>
           ))}

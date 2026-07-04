@@ -69,11 +69,25 @@ function safeJson(text: string): unknown {
   }
 }
 
+function buildUrl(baseUrl: string, path: string): URL {
+  const trimmedBase = baseUrl.trim();
+  if (!trimmedBase && typeof window !== 'undefined') {
+    return new URL(path, window.location.origin);
+  }
+
+  if (trimmedBase.startsWith('/')) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    return new URL(`${trimmedBase}${path}`, origin);
+  }
+
+  return new URL(path, trimmedBase);
+}
+
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const { baseUrl, tokenStorage, onUnauthorized } = ensureConfig();
   const token = await tokenStorage.get();
 
-  const url = new URL(`${baseUrl}${path}`);
+  const url = buildUrl(baseUrl, path);
   if (opts.query) {
     for (const [key, value] of Object.entries(opts.query)) {
       if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
@@ -116,7 +130,7 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
 export async function getBlob(path: string): Promise<Blob> {
   const { baseUrl, tokenStorage } = ensureConfig();
   const token = await tokenStorage.get();
-  const res = await fetch(`${baseUrl}${path}`, {
+  const res = await fetch(buildUrl(baseUrl, path).toString(), {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) throw new ApiError(res.status, res.statusText);

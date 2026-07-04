@@ -30,11 +30,11 @@ function CreateTreeModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal title="New family tree" onClose={onClose}>
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <FormError message={formError} />
-        <TextField label="Name" error={formState.errors.name?.message} {...register('name')} />
+        <TextField label="Name" placeholder="The Johnson-Moore Tree" error={formState.errors.name?.message} {...register('name')} />
         <Textarea label="Description" error={formState.errors.description?.message} {...register('description')} />
-        <TextField label="Home region" error={formState.errors.home_region?.message} {...register('home_region')} />
+        <TextField label="Home region" placeholder="Manchester, England" error={formState.errors.home_region?.message} {...register('home_region')} />
         <Select label="Privacy" {...register('privacy')}>
           <option value="private">Private</option>
           <option value="invited">Invited only</option>
@@ -54,43 +54,60 @@ export function Trees() {
 
   return (
     <AppLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-neutral-900">Family trees</h1>
-        <div className="flex gap-2">
-          <Link
-            to="/import"
-            className="inline-flex items-center rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
-          >
-            Import GEDCOM
-          </Link>
-          <Button onClick={() => setCreating(true)}>New tree</Button>
-        </div>
-      </div>
+      <div className="space-y-8">
+        <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl space-y-2">
+            <p className="o-eyebrow">Tree management</p>
+            <h1 className="o-display text-3xl sm:text-4xl">Family trees</h1>
+            <p className="text-[15px] leading-7 text-ink-muted">
+              Every branch, lineage, and research project you can access — open a workspace or start a new one.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to="/import" className="o-btn-secondary">
+              Import GEDCOM
+            </Link>
+            <button onClick={() => setCreating(true)} className="o-btn-primary">
+              New tree
+            </button>
+          </div>
+        </header>
 
-      {isLoading ? (
-        <FullScreenSpinner />
-      ) : trees && trees.length > 0 ? (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {trees.map((tree) => (
-            <li key={tree.id}>
-              <Link
-                to={`/trees/${tree.id}`}
-                className="block rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:border-neutral-400"
-              >
-                <h2 className="font-medium text-neutral-900">{tree.name}</h2>
-                {tree.home_region && <p className="text-sm text-neutral-500">{tree.home_region}</p>}
-                <p className="mt-2 text-xs text-neutral-400">
-                  {tree.people_count ?? 0} people · {tree.privacy}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="rounded-xl border border-dashed border-neutral-300 p-10 text-center text-neutral-500">
-          No trees yet. Create your first family tree to get started.
-        </p>
-      )}
+        {isLoading ? (
+          <FullScreenSpinner />
+        ) : trees && trees.length > 0 ? (
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {trees.map((tree) => (
+              <li key={tree.id}>
+                <Link to={`/trees/${tree.id}`} className="o-card o-card-hover group flex h-full flex-col p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="text-base font-semibold text-ink transition group-hover:text-accent">{tree.name}</h2>
+                    <span className="o-chip-muted shrink-0 uppercase tracking-[0.14em]">{tree.privacy}</span>
+                  </div>
+                  <p className="mt-1 flex-1 text-sm text-ink-muted">{tree.home_region || 'Region not set yet'}</p>
+                  <div className="mt-5 flex items-center justify-between text-sm">
+                    <span className="text-ink-muted">{tree.people_count ?? 0} people</span>
+                    <span className="inline-flex items-center gap-1 font-semibold text-accent">
+                      Open
+                      <svg className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="o-empty">
+            <p className="font-medium text-ink-soft">No trees yet.</p>
+            <p className="mt-1">Create your first family tree to get started, or import a GEDCOM file.</p>
+            <button onClick={() => setCreating(true)} className="o-btn-primary o-btn-sm mt-5">
+              Create a tree
+            </button>
+          </div>
+        )}
+      </div>
 
       {creating && <CreateTreeModal onClose={() => setCreating(false)} />}
     </AppLayout>

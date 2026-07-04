@@ -1,7 +1,20 @@
-import type { ReactNode } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@core/auth/store';
 import { useLogout } from '@core/auth/hooks';
+import { CommandPalette } from './CommandPalette';
+import { ThemeToggle } from './ThemeToggle';
+import {
+  IconGlobe,
+  IconHome,
+  IconImport,
+  IconLogout,
+  IconPhoto,
+  IconSearch,
+  IconSettings,
+  IconShield,
+  IconTree,
+} from './icons';
 
 function initials(name?: string | null): string {
   if (!name) return '?';
@@ -13,36 +26,72 @@ function initials(name?: string | null): string {
     .join('');
 }
 
-function navClass({ isActive }: { isActive: boolean }) {
-  return `workspace-nav-link ${isActive ? 'is-active' : ''}`;
-}
-
-function NavDropdown({ label, items, danger }: { label: string; danger?: boolean; items: { label: string; to: string }[] }) {
+export function LogoMark({ className = 'h-9 w-9' }: { className?: string }) {
   return (
-    <div className="group relative">
-      <button className={`workspace-nav-link flex items-center gap-2 ${danger ? '!font-semibold !text-[#dc2626]' : ''}`}>
-        <span>{label}</span>
-        <span className="text-[9px] opacity-70">▾</span>
-      </button>
-      <div className="absolute left-0 top-full z-50 mt-1 hidden min-w-[220px] overflow-hidden rounded-[6px] border border-[#dde1e6] bg-white py-1 shadow-xl group-hover:block">
-        {items.map((it) => (
-          <Link
-            key={it.to}
-            to={it.to}
-            className="block px-4 py-2.5 text-sm text-[#4f5963] transition-colors hover:bg-[#f3f7fb] hover:text-[#2563eb]"
-          >
-            {it.label}
-          </Link>
-        ))}
-      </div>
-    </div>
+    <span
+      className={`flex items-center justify-center rounded-xl bg-emerald-400 text-emerald-950 ${className}`}
+      style={{ boxShadow: '0 0 20px -6px rgba(52,211,153,.55)' }}
+    >
+      <svg className="h-[58%] w-[58%]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 21v-8" />
+        <path d="M12 13c0-3 2-5 5-5 0 3-2 5-5 5Z" />
+        <path d="M12 13c0-3-2-5-5-5 0 3 2 5 5 5Z" />
+        <path d="M12 8V3" />
+        <path d="M5 21h14" />
+      </svg>
+    </span>
   );
 }
+
+function sideClass({ isActive }: { isActive: boolean }) {
+  return `o-side-link ${isActive ? 'is-active' : ''}`;
+}
+
+const NAV = [
+  { to: '/dashboard', label: 'Home', icon: IconHome, exact: false },
+  { to: '/trees', label: 'Family trees', icon: IconTree },
+  { to: '/media', label: 'Photos', icon: IconPhoto },
+  { to: '/relationship-calculator', label: 'Global Tree', icon: IconGlobe },
+];
 
 export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: boolean }) {
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // ⌘K / Ctrl+K opens the command palette from anywhere.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (!userMenuRef.current?.contains(e.target as Node)) setUserMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setUserMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [userMenuOpen]);
+
+  useEffect(() => setUserMenuOpen(false), [location.pathname]);
 
   const onLogout = async () => {
     await logout.mutateAsync();
@@ -50,70 +99,158 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* ── Topbar ── */}
-      <header className="flex h-11 shrink-0 items-center justify-between bg-[#666462] px-6 text-white">
-        <div className="flex items-center gap-3 text-[16px] font-medium">
-          <span>Origynz</span>
-        </div>
-        <div className="flex items-center gap-4 text-[14px]">
-          <span className="flex items-center gap-1.5 text-white/80">
-            <span>🇬🇧</span>
-            <span className="text-[11px] font-semibold tracking-wide">EN</span>
-          </span>
-          <span className="workspace-topbar-icon-btn">✉</span>
-          <div className="workspace-topbar-user">
-            <span className="workspace-user-avatar !h-7 !w-7 !text-[10px]">{initials(user?.name)}</span>
-            <span className="text-[13px] font-medium leading-none">{user?.name}</span>
-          </div>
-          <button onClick={onLogout} className="workspace-topbar-btn">
-            Log out
-          </button>
-          <span className="workspace-topbar-btn cursor-default">Help</span>
-        </div>
-      </header>
+    // Bleed pages (the tree workspace) lock to the viewport: the canvas fills
+    // the remaining space and inner panels scroll themselves — no page scroll.
+    <div className={`flex ${bleed ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
+      {/* ── Sidebar (desktop) ── */}
+      <aside className="o-sidebar">
+        <Link to="/dashboard" className="flex items-center gap-2.5 px-5 pb-4 pt-6" aria-label="Origynz home">
+          <LogoMark className="h-8 w-8" />
+          <span className="font-display text-[19px] font-semibold tracking-tight text-ink">Origynz</span>
+        </Link>
 
-      {/* ── Nav header ── */}
-      <div className="flex h-[72px] shrink-0 items-center justify-center border-b border-[#ececec] bg-white">
-        <div className="flex w-full max-w-[1200px] items-center justify-between px-8">
-          <Link to="/dashboard" className="text-[28px] font-semibold tracking-tight text-[#5d5d5d] transition-colors duration-150 hover:text-[#2563eb]">
-            Origynz
+        <div className="px-3 pb-1">
+          <button type="button" onClick={() => setPaletteOpen(true)} className="o-search-btn w-full justify-between">
+            <span className="flex items-center gap-2.5">
+              <IconSearch className="h-4 w-4" />
+              Search…
+            </span>
+            <span className="o-kbd">⌘K</span>
+          </button>
+        </div>
+
+        <nav className="flex-1 space-y-0.5 px-3 pt-3" aria-label="Primary">
+          {NAV.map((item) => (
+            <NavLink key={item.to} to={item.to} className={sideClass}>
+              <item.icon className="o-side-icon" />
+              {item.label}
+            </NavLink>
+          ))}
+
+          <p className="o-side-heading">Tools</p>
+          <NavLink to="/import" className={sideClass}>
+            <IconImport className="o-side-icon" />
+            Import GEDCOM
+          </NavLink>
+          <NavLink to="/settings" className={sideClass}>
+            <IconSettings className="o-side-icon" />
+            Settings
+          </NavLink>
+          {user?.is_super_admin && (
+            <NavLink to="/admin" className={sideClass}>
+              <IconShield className="o-side-icon" />
+              Administration
+            </NavLink>
+          )}
+        </nav>
+
+        <div className="border-t border-line p-3">
+          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+            <span className="o-avatar h-9 w-9 text-xs">{initials(user?.name)}</span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-semibold text-ink">{user?.name}</p>
+              <p className="truncate text-[11px] text-ink-muted">{user?.email}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void onLogout()}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-muted transition hover:bg-fill hover:text-ink"
+              aria-label="Log out"
+              title="Log out"
+            >
+              <IconLogout className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Main column ── */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="o-topbar">
+          {/* Mobile logo */}
+          <Link to="/dashboard" className="flex items-center gap-2 lg:hidden" aria-label="Origynz home">
+            <LogoMark className="h-8 w-8" />
+            <span className="font-display text-[17px] font-semibold tracking-tight text-ink">Origynz</span>
           </Link>
 
-          <nav className="flex items-center gap-2 text-[#5f6a74]">
-            <NavDropdown label="Home" items={[{ label: 'Home overview', to: '/dashboard' }]} />
-            <NavDropdown
-              label="Family tree"
-              items={[
-                { label: 'My family trees', to: '/trees' },
-                { label: 'Import GEDCOM', to: '/import' },
-              ]}
-            />
-            <NavLink to="/relationship-calculator" className={navClass}>
-              Global Tree
-            </NavLink>
-            <NavLink to="/media" className={navClass}>
-              Photos
-            </NavLink>
-            <span className="workspace-nav-link is-disabled">DNA</span>
-            <span className="workspace-nav-link is-disabled">Research</span>
-            <NavLink to="/settings" className={navClass}>
-              Settings
-            </NavLink>
-            {user?.is_super_admin && <NavDropdown label="Admin" danger items={[{ label: 'Dashboard', to: '/admin' }]} />}
-          </nav>
+          <div className="flex-1" />
 
-          <div className="w-10 text-right text-[#ababab]">✣</div>
-        </div>
+          {/* Search (mobile icon; desktop handled in sidebar) */}
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-fill hover:text-ink lg:hidden"
+            aria-label="Search"
+          >
+            <IconSearch />
+          </button>
+
+          <ThemeToggle />
+
+          {/* User menu */}
+          <div ref={userMenuRef} className="relative">
+            <button
+              type="button"
+              className="flex min-h-10 items-center gap-2 rounded-full p-1 transition hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+              aria-haspopup="true"
+              aria-expanded={userMenuOpen}
+              aria-label="Account menu"
+              onClick={() => setUserMenuOpen((v) => !v)}
+            >
+              <span className="o-avatar h-8 w-8 text-[11px]">{initials(user?.name)}</span>
+            </button>
+            {userMenuOpen && (
+              <div className="o-menu right-0 w-64" role="menu">
+                <div className="px-4 pb-2.5 pt-2">
+                  <p className="truncate text-sm font-semibold text-ink">{user?.name}</p>
+                  <p className="truncate text-xs text-ink-muted">{user?.email}</p>
+                </div>
+                <div className="o-menu-divider" />
+                <Link to="/settings" role="menuitem" className="o-menu-item">
+                  <IconSettings className="h-4 w-4 text-ink-muted" />
+                  Settings
+                </Link>
+                {user?.is_super_admin && (
+                  <Link to="/admin" role="menuitem" className="o-menu-item">
+                    <IconShield className="h-4 w-4 text-ink-muted" />
+                    Administration
+                  </Link>
+                )}
+                <div className="o-menu-divider" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="o-menu-item text-danger hover:text-danger-strong"
+                  onClick={() => void onLogout()}
+                >
+                  <IconLogout className="h-4 w-4" />
+                  Log out
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <main className={bleed ? 'flex min-h-0 flex-1 flex-col pb-14 lg:pb-0' : 'flex-1 pb-20 lg:pb-4'}>
+          {bleed ? children : <div className="o-page o-rise">{children}</div>}
+        </main>
       </div>
 
-      <main className={bleed ? 'flex min-h-0 flex-1 flex-col' : 'flex-1'}>
-        {bleed ? children : <div className="mx-auto w-full max-w-[1200px] px-8 py-8">{children}</div>}
-      </main>
+      {/* ── Bottom tab bar (mobile) ── */}
+      <nav className="o-tabbar" aria-label="Primary">
+        {NAV.slice(0, 3).map((item) => (
+          <NavLink key={item.to} to={item.to} className={({ isActive }) => `o-tab ${isActive ? 'is-active' : ''}`}>
+            <item.icon className="h-5 w-5" />
+            {item.label === 'Family trees' ? 'Trees' : item.label}
+          </NavLink>
+        ))}
+        <button type="button" onClick={() => setPaletteOpen(true)} className="o-tab">
+          <IconSearch className="h-5 w-5" />
+          Search
+        </button>
+      </nav>
 
-      <footer className="border-t border-[#e6e6e6] bg-white px-8 py-5 text-center text-xs text-[#9a9a9a]">
-        © {new Date().getFullYear()} Origynz · Genealogy workspace
-      </footer>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

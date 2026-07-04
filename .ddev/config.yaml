@@ -18,6 +18,9 @@ composer_version: "2"
 disable_settings_management: true
 web_environment:
   - FRONTEND_URL=https://origynz.ddev.site
+# Make `ddev share` tunnel the React/Vite host instead of falling through to
+# the default Laravel server block.
+share_provider_args: "--host-header=origynz.ddev.site"
 # React SPA dev server. nginx (nginx_full/origynz-spa.conf) proxies origynz.ddev.site
 # to this Vite server; installs deps on first boot if missing, then runs with HMR.
 web_extra_daemons:

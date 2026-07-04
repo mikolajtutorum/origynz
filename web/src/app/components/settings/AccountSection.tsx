@@ -37,23 +37,23 @@ export function AccountSection() {
   return (
     <div className="flex max-w-lg flex-col gap-8">
       <div className="flex flex-col gap-3">
-        <h3 className="font-medium text-neutral-900">Export your data</h3>
-        <p className="text-sm text-neutral-500">Download a JSON copy of your profile, trees, and activity.</p>
+        <h3 className="font-medium text-ink">Export your data</h3>
+        <p className="text-sm text-ink-muted">Download a JSON copy of your profile, trees, and activity.</p>
         <div>
           <Button onClick={exportData}>Download data export</Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-3 rounded-xl border border-red-200 p-4">
-        <h3 className="font-medium text-red-700">Delete account</h3>
-        <p className="text-sm text-neutral-500">This permanently removes your account and data.</p>
+        <h3 className="font-medium text-danger-strong">Delete account</h3>
+        <p className="text-sm text-ink-muted">This permanently removes your account and data.</p>
         <FormError message={error} />
         <TextField label="Confirm your password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <div>
           <button
             onClick={deleteAccount}
             disabled={busy || !password}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            className="o-btn-danger"
           >
             Delete my account
           </button>

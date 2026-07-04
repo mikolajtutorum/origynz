@@ -57,7 +57,7 @@ export function Login() {
 
   if (needsTwoFactor) {
     return (
-      <AuthCard title="Two-factor authentication">
+      <AuthCard title="Two-factor authentication" subtitle="Enter the code from your authenticator app">
         <div className="flex flex-col gap-4">
           <FormError message={formError} />
           <TextField
@@ -76,7 +76,7 @@ export function Login() {
   }
 
   return (
-    <AuthCard title="Sign in to Origynz">
+    <AuthCard title="Welcome back" subtitle="Log in to continue your family research">
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <FormError message={formError} />
         <TextField
@@ -97,9 +97,9 @@ export function Login() {
           Sign in
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-neutral-500">
+      <p className="mt-5 text-center text-sm text-ink-muted">
         No account?{' '}
-        <Link to="/register" className="text-neutral-900 underline">
+        <Link to="/register" className="font-medium text-accent underline decoration-emerald-400/40 underline-offset-2 hover:text-accent-strong">
           Create one
         </Link>
       </p>

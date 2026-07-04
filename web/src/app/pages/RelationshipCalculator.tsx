@@ -34,43 +34,62 @@ export function RelationshipCalculator() {
 
   return (
     <AppLayout>
-      <h1 className="text-2xl font-semibold text-neutral-900">Relationship calculator</h1>
-      <p className="mt-1 text-neutral-500">Find how two people in the Global Tree are connected.</p>
+      <div className="space-y-8">
+        <header className="max-w-2xl space-y-2">
+          <p className="o-eyebrow">Global Tree</p>
+          <h1 className="o-display text-3xl sm:text-4xl">Relationship calculator</h1>
+          <p className="text-[15px] leading-7 text-ink-muted">
+            Pick any two people and follow the chain of parents, spouses, and children that connects them.
+          </p>
+        </header>
 
-      <div className="mt-6 max-w-xl rounded-xl border border-neutral-200 bg-white p-5">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <PersonSearchInput label="Person A" selected={a} onSelect={setA} />
-          <PersonSearchInput label="Person B" selected={b} onSelect={setB} />
-        </div>
-        <div className="mt-4">
-          <Button onClick={run} disabled={!a || !b} loading={calc.isPending}>
-            Calculate
-          </Button>
-        </div>
-        <div className="mt-3">
-          <FormError message={error} />
-        </div>
-      </div>
-
-      {result && !error && (
-        <div className="mt-6 max-w-xl rounded-xl border border-neutral-200 bg-white p-5">
-          {result.connected ? (
-            <ol className="flex flex-col gap-2">
-              {result.path.map((step, i) => (
-                <li key={step.id} className="flex items-center gap-3 text-sm">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-xs text-white">
-                    {i + 1}
-                  </span>
-                  <span className="font-medium text-neutral-900">{step.name}</span>
-                  {step.via && <span className="text-neutral-500">({step.via})</span>}
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="text-neutral-600">No connection found between these two people in the Global Tree.</p>
+        <div className="o-card max-w-2xl p-6 sm:p-7">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <PersonSearchInput label="Person A" selected={a} onSelect={setA} />
+            <PersonSearchInput label="Person B" selected={b} onSelect={setB} />
+          </div>
+          <div className="mt-5">
+            <Button onClick={run} disabled={!a || !b} loading={calc.isPending}>
+              Calculate relationship
+            </Button>
+          </div>
+          {error && (
+            <div className="mt-4">
+              <FormError message={error} />
+            </div>
           )}
         </div>
-      )}
+
+        {result && !error && (
+          <div className="o-card max-w-2xl p-6 sm:p-7">
+            {result.connected ? (
+              <>
+                <h2 className="text-base font-semibold text-ink">Connection found</h2>
+                <ol className="mt-4 flex flex-col">
+                  {result.path.map((step, i) => (
+                    <li key={step.id} className="relative flex gap-4 pb-5 last:pb-0">
+                      {i < result.path.length - 1 && (
+                        <span className="absolute left-[13px] top-8 h-[calc(100%-2rem)] w-px bg-accent-edge" aria-hidden="true" />
+                      )}
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-xs font-semibold text-emerald-950">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 pt-0.5">
+                        <p className="text-sm font-semibold text-ink">{step.name}</p>
+                        {step.via && <p className="text-xs text-ink-muted">{step.via}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            ) : (
+              <div className="o-empty border-0 bg-transparent p-0">
+                No connection found between these two people in the Global Tree.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </AppLayout>
   );
 }

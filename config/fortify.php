@@ -130,10 +130,7 @@ return [
     |
     */
 
-    // Kept enabled during the SPA migration so the legacy Blade auth pages (and
-    // their tests) keep working. The React SPA authenticates via /api/v1/auth/*.
-    // Flip to false in Milestone 6 when the Blade UI is retired.
-    'views' => true,
+    'views' => false,
 
     /*
     |--------------------------------------------------------------------------

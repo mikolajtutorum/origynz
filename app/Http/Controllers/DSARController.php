@@ -4,16 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\View\View;
 use Spatie\Activitylog\Models\Activity;
 
 class DSARController extends Controller
 {
-    public function index(): View
-    {
-        return view('settings.data-export');
-    }
-
     public function export(Request $request): Response
     {
         $user = $request->user();

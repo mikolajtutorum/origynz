@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "origynz/api",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "Origynz Laravel API.",
     "keywords": [
         "laravel",
         "framework"
@@ -16,14 +16,10 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^3.0",
-        "livewire/flux": "^2.13.1",
-        "livewire/livewire": "^4.1",
         "sentry/sentry-laravel": "^4.25",
         "spatie/laravel-activitylog": "^4.10",
-        "spatie/laravel-honeypot": "^4.7",
         "spatie/laravel-onboard": "^2.6",
         "spatie/laravel-permission": "^7.0",
-        "spatie/laravel-sitemap": "^8.0",
         "spatie/laravel-uptime-monitor": "^4.6"
     },
     "require-dev": {
@@ -56,13 +52,11 @@
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
+            "@php artisan migrate --force"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan horizon\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,horizon,logs,vite --kill-others"
+            "@php artisan serve"
         ],
         "lint": [
             "pint --parallel"

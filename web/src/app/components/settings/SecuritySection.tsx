@@ -26,9 +26,9 @@ function PasswordChange() {
 
   return (
     <div className="flex max-w-lg flex-col gap-3">
-      <h3 className="font-medium text-neutral-900">Change password</h3>
+      <h3 className="font-medium text-ink">Change password</h3>
       <FormError message={error} />
-      {saved && <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">Password updated.</p>}
+      {saved && <p className="o-alert-success">Password updated.</p>}
       <TextField label="Current password" type="password" value={form.current_password} onChange={(e) => setForm({ ...form, current_password: e.target.value })} />
       <TextField label="New password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
       <TextField label="Confirm new password" type="password" value={form.password_confirmation} onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })} />
@@ -71,16 +71,16 @@ function TwoFactor() {
     }
   };
 
-  if (!state) return <p className="text-sm text-neutral-500">Loading two-factor status…</p>;
+  if (!state) return <p className="text-sm text-ink-muted">Loading two-factor status…</p>;
 
   return (
     <div className="flex max-w-lg flex-col gap-3">
-      <h3 className="font-medium text-neutral-900">Two-factor authentication</h3>
+      <h3 className="font-medium text-ink">Two-factor authentication</h3>
       <FormError message={error} />
 
       {!state.enabled && (
         <>
-          <p className="text-sm text-neutral-500">Add an authenticator app for extra security.</p>
+          <p className="text-sm text-ink-muted">Add an authenticator app for extra security.</p>
           <TextField label="Current password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <div>
             <Button loading={busy} onClick={() => run(() => settingsApi.twoFactor.enable(password))}>
@@ -92,9 +92,9 @@ function TwoFactor() {
 
       {state.enabled && !state.confirmed && (
         <>
-          <p className="text-sm text-neutral-500">Scan this QR code, then enter the 6-digit code to confirm.</p>
+          <p className="text-sm text-ink-muted">Scan this QR code, then enter the 6-digit code to confirm.</p>
           {state.qr_svg && <div className="w-40" dangerouslySetInnerHTML={{ __html: state.qr_svg }} />}
-          {state.secret && <p className="font-mono text-xs text-neutral-500">Secret: {state.secret}</p>}
+          {state.secret && <p className="font-mono text-xs text-ink-muted">Secret: {state.secret}</p>}
           <TextField label="Authentication code" value={code} onChange={(e) => setCode(e.target.value)} />
           <div>
             <Button loading={busy} onClick={() => run(() => settingsApi.twoFactor.confirm(code))}>
@@ -106,11 +106,11 @@ function TwoFactor() {
 
       {state.enabled && state.confirmed && (
         <>
-          <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">Two-factor authentication is on.</p>
+          <p className="o-alert-success">Two-factor authentication is on.</p>
           {state.recovery_codes.length > 0 && (
-            <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3">
-              <p className="mb-2 text-xs font-medium text-neutral-600">Recovery codes — store these safely:</p>
-              <ul className="grid grid-cols-2 gap-1 font-mono text-xs text-neutral-700">
+            <div className="rounded-2xl border border-line bg-paper p-4">
+              <p className="mb-2 text-xs font-medium text-ink-soft">Recovery codes — store these safely:</p>
+              <ul className="grid grid-cols-2 gap-1 font-mono text-xs text-ink-soft">
                 {state.recovery_codes.map((c) => (
                   <li key={c}>{c}</li>
                 ))}
@@ -124,7 +124,7 @@ function TwoFactor() {
             </Button>
             <button
               onClick={() => run(() => settingsApi.twoFactor.disable(password))}
-              className="rounded-md border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              className="o-btn-danger-soft o-btn-sm"
             >
               Disable 2FA
             </button>

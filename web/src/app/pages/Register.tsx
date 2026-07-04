@@ -27,7 +27,7 @@ export function Register() {
   });
 
   return (
-    <AuthCard title="Create your account">
+    <AuthCard title="Create your account" subtitle="Start your family tree in minutes — free">
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <FormError message={formError} />
         <TextField
@@ -61,11 +61,11 @@ export function Register() {
           label={
             <>
               I agree to the{' '}
-              <Link to="/terms-of-service" className="underline">
+              <Link to="/terms-of-service" className="font-medium text-accent underline decoration-emerald-400/40 underline-offset-2">
                 Terms
               </Link>{' '}
               and{' '}
-              <Link to="/privacy-policy" className="underline">
+              <Link to="/privacy-policy" className="font-medium text-accent underline decoration-emerald-400/40 underline-offset-2">
                 Privacy Policy
               </Link>
               .
@@ -83,9 +83,9 @@ export function Register() {
           Create account
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-neutral-500">
+      <p className="mt-5 text-center text-sm text-ink-muted">
         Already have an account?{' '}
-        <Link to="/login" className="text-neutral-900 underline">
+        <Link to="/login" className="font-medium text-accent underline decoration-emerald-400/40 underline-offset-2 hover:text-accent-strong">
           Sign in
         </Link>
       </p>

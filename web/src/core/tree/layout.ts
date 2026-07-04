@@ -24,14 +24,25 @@ import type { FamilyGraph } from './graph';
 // are never inferred from how close two cards happen to land, so no stray lines
 // appear between siblings, their partners or their kids.
 
-export const CARD_W = 188;
-export const CARD_H = 84;
+// Card dimensions are live bindings so the canvas can switch between the wide
+// desktop card and the portrait mobile card. All spacing derives from them;
+// the defaults reproduce the original desktop layout exactly.
+export let CARD_W = 188;
+export let CARD_H = 84;
 const H_GAP = 40; // gap between sibling subtrees / distinct couples
 const COUPLE_GAP = 12; // gap between the two cards of a tightly-packed couple
-const COUPLE_STEP = CARD_W + COUPLE_GAP; // centre-to-centre distance of a couple
+let COUPLE_STEP = CARD_W + COUPLE_GAP; // centre-to-centre distance of a couple
 const ROW_GAP = 96; // vertical gap between generations — roomy enough that the
 // route band (upper) and the child-bar band (lower) read as separate lanes
-const ROW = CARD_H + ROW_GAP;
+let ROW = CARD_H + ROW_GAP;
+
+// Must be called before buildTreeLayout when switching card style.
+export function setCardDims(w: number, h: number): void {
+  CARD_W = w;
+  CARD_H = h;
+  COUPLE_STEP = CARD_W + COUPLE_GAP;
+  ROW = CARD_H + ROW_GAP;
+}
 const CARD_CAP = 6000; // safety limit on total cards
 const BAR_LIFT = 12; // vertical step between de-conflicted lanes (routes and
 // child bars) — wide enough that parallel runs read as clearly separate lines

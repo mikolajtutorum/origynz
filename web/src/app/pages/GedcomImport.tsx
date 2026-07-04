@@ -30,9 +30,9 @@ function StageRow({ state, label, hint, detail }: { state: 'done' | 'active' | '
       <span
         className={[
           'mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full border text-[11px] font-semibold',
-          state === 'done' && 'border-emerald-500 bg-emerald-500 text-white',
-          state === 'active' && 'border-neutral-900 text-neutral-900',
-          state === 'pending' && 'border-neutral-300 text-neutral-300',
+          state === 'done' && 'border-emerald-400 bg-emerald-400 text-emerald-950',
+          state === 'active' && 'border-emerald-300 text-accent',
+          state === 'pending' && 'border-line-strong text-line-strong',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -46,12 +46,12 @@ function StageRow({ state, label, hint, detail }: { state: 'done' | 'active' | '
             />
           </svg>
         ) : state === 'active' ? (
-          <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-900" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-300" />
         ) : null}
       </span>
       <div className="min-w-0">
-        <p className={state === 'pending' ? 'text-sm text-neutral-400' : 'text-sm font-medium text-neutral-800'}>{label}</p>
-        <p className="text-xs text-neutral-400">{detail ?? hint}</p>
+        <p className={state === 'pending' ? 'text-sm text-ink-muted/70' : 'text-sm font-medium text-ink'}>{label}</p>
+        <p className="text-xs text-ink-muted">{detail ?? hint}</p>
       </div>
     </li>
   );
@@ -139,20 +139,26 @@ export function GedcomImport() {
 
   return (
     <AppLayout>
-      <h1 className="text-2xl font-semibold text-neutral-900">Import GEDCOM</h1>
-      <p className="mt-1 text-neutral-500">Upload a .ged file to create or extend a family tree.</p>
+      <header className="max-w-2xl space-y-2">
+        <p className="o-eyebrow">GEDCOM import</p>
+        <h1 className="o-display text-3xl sm:text-4xl">Bring your research with you.</h1>
+        <p className="text-[15px] leading-7 text-ink-muted">
+          Upload a .ged file from MyHeritage, Ancestry, FamilySearch, or any other genealogy tool to create or
+          extend a family tree — people, relationships, and photos included.
+        </p>
+      </header>
 
-      <div className="mt-6 max-w-xl rounded-xl border border-neutral-200 bg-white p-5">
+      <div className="o-card mt-8 max-w-xl p-6 sm:p-7">
         {!busy ? (
           <div className="flex flex-col gap-4">
             <FormError message={error} />
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-neutral-700">GEDCOM file</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="o-label">GEDCOM file</label>
               <input
                 type="file"
                 accept=".ged,.gedcom,text/plain"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="text-sm"
+                className="o-input"
               />
             </div>
             <Select label="Destination" value={target} onChange={(e) => setTarget(e.target.value)}>
@@ -179,26 +185,26 @@ export function GedcomImport() {
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <div className="flex items-baseline justify-between gap-3">
-                <p className="text-sm font-medium text-neutral-800">{progress?.message}</p>
-                <span className="font-mono text-sm tabular-nums text-neutral-500">{pct}%</span>
+                <p className="text-sm font-medium text-ink">{progress?.message}</p>
+                <span className="text-sm tabular-nums text-ink-muted">{pct}%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-paper-deep">
                 <div
-                  className={`h-full transition-all duration-500 ${done ? 'bg-emerald-500' : 'bg-neutral-900'}`}
+                  className={`h-full transition-all duration-500 ${done ? 'bg-emerald-400' : 'bg-emerald-500'}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>
               {progress?.total != null && progress.total > 0 && progress.stage === 'people' && (
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-ink-muted">
                   {progress.current ?? 0} of {progress.total} people processed
                 </p>
               )}
             </div>
 
-            <ol className="flex flex-col gap-3 border-t border-neutral-100 pt-4">
+            <ol className="flex flex-col gap-3 border-t border-line pt-4">
               {queued && (
-                <li className="flex items-center gap-3 text-sm text-neutral-500">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-700" />
+                <li className="flex items-center gap-3 text-sm text-ink-muted">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-edge border-t-emerald-400" />
                   Waiting for a worker to pick up the import…
                 </li>
               )}
@@ -213,7 +219,7 @@ export function GedcomImport() {
             </ol>
 
             {done && (
-              <p className="text-sm text-emerald-600">
+              <p className="text-sm font-medium text-accent">
                 {progress?.people_created != null
                   ? `Added ${progress.people_created} people and ${progress.relationships_created ?? 0} relationships. `
                   : ''}
@@ -221,7 +227,7 @@ export function GedcomImport() {
               </p>
             )}
             {!done && (
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs leading-5 text-ink-muted">
                 Photos and other media linked to external URLs continue downloading in the background after the import
                 finishes.
               </p>

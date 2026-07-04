@@ -40,7 +40,7 @@ function UploadModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal title="Upload media" onClose={onClose}>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <FormError message={error} />
         <Select
           label="Tree"
@@ -66,9 +66,9 @@ function UploadModal({ onClose }: { onClose: () => void }) {
             treeId={treeId}
           />
         )}
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-neutral-700">File</label>
-          <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" />
+        <div className="flex flex-col gap-1.5">
+          <label className="o-label">File</label>
+          <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="o-input" />
         </div>
         <Button onClick={submit} loading={upload.isPending}>
           Upload
@@ -78,7 +78,7 @@ function UploadModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-const SIDE = [
+const FILTERS = [
   { key: 'all', label: 'All media', filters: { kind: 'all', linked: 'all' } },
   { key: 'images', label: 'Photos', filters: { kind: 'images', linked: 'all' } },
   { key: 'linked', label: 'Linked to people', filters: { kind: 'all', linked: 'linked' } },
@@ -88,7 +88,7 @@ const SIDE = [
 export function MediaLibrary() {
   const [active, setActive] = useState<string>('all');
   const [search, setSearch] = useState('');
-  const current = SIDE.find((s) => s.key === active)!;
+  const current = FILTERS.find((s) => s.key === active)!;
   const filters: MediaFilters = { ...current.filters, q: search } as MediaFilters;
   const { data: media, isLoading } = useGlobalMedia(filters);
   const remove = useRemoveMedia();
@@ -96,71 +96,98 @@ export function MediaLibrary() {
 
   return (
     <AppLayout>
-      <h1 className="mb-5 text-2xl font-semibold text-[#1f252b]">Photos &amp; media</h1>
+      <div className="space-y-7">
+        <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl space-y-2">
+            <p className="o-eyebrow">Media library</p>
+            <h1 className="o-display text-3xl sm:text-4xl">Photos &amp; media</h1>
+            <p className="text-[15px] leading-7 text-ink-muted">
+              Every photo and document across your trees — link them to people to give profiles a face.
+            </p>
+          </div>
+          <button onClick={() => setUploading(true)} className="o-btn-primary">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 19V5M5 12l7-7 7 7" />
+            </svg>
+            Upload
+          </button>
+        </header>
 
-      <div className="media-browser-shell">
-        {/* Side nav */}
-        <nav className="border-r border-[#ececec] py-1">
-          {SIDE.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setActive(s.key)}
-              className={`media-browser-side-link w-full text-left ${active === s.key ? 'is-active' : ''}`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* Content */}
-        <div className="media-browser-content">
-          <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="o-subnav" role="tablist" aria-label="Media filters">
+            {FILTERS.map((s) => (
+              <button
+                key={s.key}
+                role="tab"
+                aria-selected={active === s.key}
+                onClick={() => setActive(s.key)}
+                className={`o-subnav-link ${active === s.key ? 'is-active' : ''}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div className="relative sm:w-72">
             <input
               placeholder="Search media…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-72 rounded-md border border-[#d4dae1] px-3 py-2 text-sm"
+              className="o-input rounded-full pl-10"
+              aria-label="Search media"
             />
-            <Button onClick={() => setUploading(true)}>Upload</Button>
+            <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
           </div>
+        </div>
 
-          {isLoading ? (
-            <p className="text-sm text-neutral-500">Loading…</p>
-          ) : media && media.length > 0 ? (
-            <div className="media-library-grid">
-              {media.map((m) => (
-                <div key={m.id} className="overflow-hidden rounded-xl border border-[#ececec] bg-white shadow-sm">
-                  <div className="flex h-36 items-center justify-center bg-[linear-gradient(145deg,#e9e9e9,#cacaca)]">
-                    {m.is_image && m.preview_url ? (
-                      <img src={m.preview_url} alt={m.title} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-3xl text-[#5c5c5c]">📄</span>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="truncate text-sm font-medium text-[#1f252b]">{m.title}</p>
-                    <p className="truncate text-xs text-[#9aa3ab]">
-                      {m.tree_name ? `${m.tree_name} · ` : ''}
-                      {m.file_name}
-                    </p>
-                    <div className="mt-2 flex justify-between text-xs">
-                      <a href={m.download_url} className="text-[#2563eb] hover:underline">
-                        Download
-                      </a>
-                      <button onClick={() => remove.mutate(m.id)} className="text-[#c0392b] hover:underline">
-                        Delete
-                      </button>
-                    </div>
+        {isLoading ? (
+          <p className="text-sm text-ink-muted">Loading…</p>
+        ) : media && media.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {media.map((m) => (
+              <div key={m.id} className="o-card o-card-hover group overflow-hidden">
+                <div className="flex aspect-[4/3] items-center justify-center bg-paper-deep">
+                  {m.is_image && m.preview_url ? (
+                    <img src={m.preview_url} alt={m.title} loading="lazy" className="h-full w-full object-cover" />
+                  ) : (
+                    <svg className="h-9 w-9 text-ink-muted/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" />
+                      <path d="M14 2v6h6" />
+                    </svg>
+                  )}
+                </div>
+                <div className="p-3.5">
+                  <p className="truncate text-sm font-medium text-ink">{m.title}</p>
+                  <p className="truncate text-xs text-ink-muted">
+                    {m.tree_name ? `${m.tree_name} · ` : ''}
+                    {m.file_name}
+                  </p>
+                  <div className="mt-2.5 flex justify-between text-xs font-medium">
+                    <a href={m.download_url} className="text-accent hover:text-accent-strong">
+                      Download
+                    </a>
+                    <button
+                      onClick={() => window.confirm(`Delete “${m.title}”?`) && remove.mutate(m.id)}
+                      className="text-danger hover:text-danger-strong"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl border border-dashed border-neutral-300 p-10 text-center text-neutral-500">
-              No media here yet. Upload a photo or document to get started.
-            </p>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="o-empty">
+            <p className="font-medium text-ink-soft">No media here yet.</p>
+            <p className="mt-1">Upload a photo or document to get started.</p>
+            <button onClick={() => setUploading(true)} className="o-btn-primary o-btn-sm mt-5">
+              Upload media
+            </button>
+          </div>
+        )}
       </div>
 
       {uploading && <UploadModal onClose={() => setUploading(false)} />}

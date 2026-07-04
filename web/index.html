@@ -2,8 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Origynz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0f0c" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script>
+      // Apply the saved (or OS) theme before first paint to avoid a flash.
+      (function () {
+        try {
+          var t = localStorage.getItem('origynz-theme');
+          if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          if (t === 'dark') document.documentElement.classList.add('dark');
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', t === 'dark' ? '#0b0f0c' : '#f6f4ee');
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="description" content="Origynz — build living family trees, preserve photos and records, and map every relationship. Where family stories take root." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%2326533a'/%3E%3Cg fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19v-6'/%3E%3Cpath d='M12 13c0-3 2-5 5-5 0 3-2 5-5 5Z'/%3E%3Cpath d='M12 13c0-3-2-5-5-5 0 3 2 5 5 5Z'/%3E%3Cpath d='M12 8V5'/%3E%3Cpath d='M7 19h10'/%3E%3C/g%3E%3C/svg%3E" />
+    <title>Origynz — Where family stories take root</title>
   </head>
   <body>
     <div id="root"></div>

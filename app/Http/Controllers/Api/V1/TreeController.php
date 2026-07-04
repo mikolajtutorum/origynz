@@ -150,11 +150,16 @@ class TreeController extends Controller
 
             $byPerson = [];
             foreach ($avatars as $media) {
-                $byPerson[$media->person_id] ??= URL::temporarySignedRoute(
+                if (isset($byPerson[$media->person_id])) {
+                    continue;
+                }
+                $url = URL::temporarySignedRoute(
                     'api.media.file',
                     now()->addHours(6),
                     ['mediaItem' => $media->id, 'mode' => 'preview'],
                 );
+                // Host-relative for the same reason as MediaResource::signedFileUrl().
+                $byPerson[$media->person_id] = parse_url($url, PHP_URL_PATH).'?'.parse_url($url, PHP_URL_QUERY);
             }
 
             foreach ($people as $person) {
