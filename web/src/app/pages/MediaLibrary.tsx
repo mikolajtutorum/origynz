@@ -3,11 +3,13 @@ import type { Person } from '@core/models';
 import type { MediaFilters } from '@core/api/endpoints/media';
 import { useGlobalMedia, useRemoveMedia, useUploadMedia } from '@core/queries/media';
 import { useTrees } from '@core/queries/trees';
+import { useT } from '@core/i18n';
 import { AppLayout } from '../components/AppLayout';
 import { PersonSearchInput } from '../components/PersonSearchInput';
 import { Button, FormError, Modal, Select, TextField } from '../components/ui';
 
 function UploadModal({ onClose }: { onClose: () => void }) {
+  const t = useT();
   const { data: trees } = useTrees();
   const [treeId, setTreeId] = useState('');
   const [title, setTitle] = useState('');
@@ -18,7 +20,7 @@ function UploadModal({ onClose }: { onClose: () => void }) {
 
   const submit = async () => {
     if (!treeId || !file || !title.trim()) {
-      setError('Tree, title and a file are required.');
+      setError(t('Tree, title and a file are required.'));
       return;
     }
     setError(null);
@@ -39,39 +41,39 @@ function UploadModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Modal title="Upload media" onClose={onClose}>
+    <Modal title={t('Upload media')} onClose={onClose}>
       <div className="flex flex-col gap-4">
         <FormError message={error} />
         <Select
-          label="Tree"
+          label={t('Family trees')}
           value={treeId}
           onChange={(e) => {
             setTreeId(e.target.value);
             setPerson(null);
           }}
         >
-          <option value="">Select a tree…</option>
-          {trees?.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
+          <option value="">{t('Select a tree…')}</option>
+          {trees?.map((tree) => (
+            <option key={tree.id} value={tree.id}>
+              {tree.name}
             </option>
           ))}
         </Select>
-        <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <TextField label={t('Title')} value={title} onChange={(e) => setTitle(e.target.value)} />
         {treeId && (
           <PersonSearchInput
-            label="Link to a person (optional — sets their photo)"
+            label={t('Link to a person (optional — sets their photo)')}
             selected={person}
             onSelect={setPerson}
             treeId={treeId}
           />
         )}
         <div className="flex flex-col gap-1.5">
-          <label className="o-label">File</label>
+          <label className="o-label">{t('File')}</label>
           <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="o-input" />
         </div>
         <Button onClick={submit} loading={upload.isPending}>
-          Upload
+          {t('Upload')}
         </Button>
       </div>
     </Modal>
@@ -86,6 +88,7 @@ const FILTERS = [
 ] as const;
 
 export function MediaLibrary() {
+  const t = useT();
   const [active, setActive] = useState<string>('all');
   const [search, setSearch] = useState('');
   const current = FILTERS.find((s) => s.key === active)!;
@@ -99,22 +102,22 @@ export function MediaLibrary() {
       <div className="space-y-7">
         <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl space-y-2">
-            <p className="o-eyebrow">Media library</p>
-            <h1 className="o-display text-3xl sm:text-4xl">Photos &amp; media</h1>
+            <p className="o-eyebrow">{t('Media library')}</p>
+            <h1 className="o-display text-3xl sm:text-4xl">{t('Photos & media')}</h1>
             <p className="text-[15px] leading-7 text-ink-muted">
-              Every photo and document across your trees — link them to people to give profiles a face.
+              {t('Every photo and document across your trees — link them to people to give profiles a face.')}
             </p>
           </div>
           <button onClick={() => setUploading(true)} className="o-btn-primary">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 19V5M5 12l7-7 7 7" />
             </svg>
-            Upload
+            {t('Upload')}
           </button>
         </header>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="o-subnav" role="tablist" aria-label="Media filters">
+          <div className="o-subnav" role="tablist" aria-label={t('Media library')}>
             {FILTERS.map((s) => (
               <button
                 key={s.key}
@@ -123,17 +126,17 @@ export function MediaLibrary() {
                 onClick={() => setActive(s.key)}
                 className={`o-subnav-link ${active === s.key ? 'is-active' : ''}`}
               >
-                {s.label}
+                {t(s.label)}
               </button>
             ))}
           </div>
           <div className="relative sm:w-72">
             <input
-              placeholder="Search media…"
+              placeholder={t('Search media…')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="o-input rounded-full pl-10"
-              aria-label="Search media"
+              aria-label={t('Search media…')}
             />
             <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="7" />
@@ -143,7 +146,7 @@ export function MediaLibrary() {
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-ink-muted">Loading…</p>
+          <p className="text-sm text-ink-muted">{t('Loading…')}</p>
         ) : media && media.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {media.map((m) => (
@@ -166,13 +169,13 @@ export function MediaLibrary() {
                   </p>
                   <div className="mt-2.5 flex justify-between text-xs font-medium">
                     <a href={m.download_url} className="text-accent hover:text-accent-strong">
-                      Download
+                      {t('Download')}
                     </a>
                     <button
-                      onClick={() => window.confirm(`Delete “${m.title}”?`) && remove.mutate(m.id)}
+                      onClick={() => window.confirm(t('Delete “{title}”?', { title: m.title })) && remove.mutate(m.id)}
                       className="text-danger hover:text-danger-strong"
                     >
-                      Delete
+                      {t('Delete')}
                     </button>
                   </div>
                 </div>
@@ -181,10 +184,10 @@ export function MediaLibrary() {
           </div>
         ) : (
           <div className="o-empty">
-            <p className="font-medium text-ink-soft">No media here yet.</p>
-            <p className="mt-1">Upload a photo or document to get started.</p>
+            <p className="font-medium text-ink-soft">{t('No media here yet.')}</p>
+            <p className="mt-1">{t('Upload a photo or document to get started.')}</p>
             <button onClick={() => setUploading(true)} className="o-btn-primary o-btn-sm mt-5">
-              Upload media
+              {t('Upload media')}
             </button>
           </div>
         )}

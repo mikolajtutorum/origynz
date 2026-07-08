@@ -21,6 +21,20 @@
           if (m) m.setAttribute('content', t === 'dark' ? '#0b0f0c' : '#f6f4ee');
         } catch (e) {}
       })();
+      // Apply the saved (or browser) language + text direction before first paint
+      // so right-to-left locales (Arabic) don't flash left-to-right.
+      (function () {
+        try {
+          var supported = { en: 'ltr', pl: 'ltr', ru: 'ltr', ar: 'rtl' };
+          var l = localStorage.getItem('origynz-lang');
+          if (!supported[l]) {
+            var nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
+            l = supported[nav] ? nav : 'en';
+          }
+          document.documentElement.lang = l;
+          document.documentElement.dir = supported[l];
+        } catch (e) {}
+      })();
     </script>
     <meta name="description" content="Origynz — build living family trees, preserve photos and records, and map every relationship. Where family stories take root." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%2326533a'/%3E%3Cg fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19v-6'/%3E%3Cpath d='M12 13c0-3 2-5 5-5 0 3-2 5-5 5Z'/%3E%3Cpath d='M12 13c0-3-2-5-5-5 0 3 2 5 5 5Z'/%3E%3Cpath d='M12 8V5'/%3E%3Cpath d='M7 19h10'/%3E%3C/g%3E%3C/svg%3E" />

@@ -2,13 +2,16 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@core/auth/store';
 import { useLogout } from '@core/auth/hooks';
+import { useT } from '@core/i18n';
 import { CommandPalette } from './CommandPalette';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import {
   IconGlobe,
   IconHome,
   IconImport,
   IconLogout,
+  IconMerge,
   IconPhoto,
   IconSearch,
   IconSettings,
@@ -55,6 +58,7 @@ const NAV = [
 ];
 
 export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: boolean }) {
+  const t = useT();
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
   const navigate = useNavigate();
@@ -113,7 +117,7 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
           <button type="button" onClick={() => setPaletteOpen(true)} className="o-search-btn w-full justify-between">
             <span className="flex items-center gap-2.5">
               <IconSearch className="h-4 w-4" />
-              Search…
+              {t('Search…')}
             </span>
             <span className="o-kbd">⌘K</span>
           </button>
@@ -123,23 +127,27 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} className={sideClass}>
               <item.icon className="o-side-icon" />
-              {item.label}
+              {t(item.label)}
             </NavLink>
           ))}
 
-          <p className="o-side-heading">Tools</p>
+          <p className="o-side-heading">{t('Tools')}</p>
           <NavLink to="/import" className={sideClass}>
             <IconImport className="o-side-icon" />
-            Import GEDCOM
+            {t('Import GEDCOM')}
+          </NavLink>
+          <NavLink to="/duplicates" className={sideClass}>
+            <IconMerge className="o-side-icon" />
+            {t('Merge duplicates')}
           </NavLink>
           <NavLink to="/settings" className={sideClass}>
             <IconSettings className="o-side-icon" />
-            Settings
+            {t('Settings')}
           </NavLink>
           {user?.is_super_admin && (
             <NavLink to="/admin" className={sideClass}>
               <IconShield className="o-side-icon" />
-              Administration
+              {t('Administration')}
             </NavLink>
           )}
         </nav>
@@ -155,8 +163,8 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
               type="button"
               onClick={() => void onLogout()}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-muted transition hover:bg-fill hover:text-ink"
-              aria-label="Log out"
-              title="Log out"
+              aria-label={t('Log out')}
+              title={t('Log out')}
             >
               <IconLogout className="h-4 w-4" />
             </button>
@@ -180,11 +188,12 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
             type="button"
             onClick={() => setPaletteOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-fill hover:text-ink lg:hidden"
-            aria-label="Search"
+            aria-label={t('Search')}
           >
             <IconSearch />
           </button>
 
+          <LanguageSwitcher />
           <ThemeToggle />
 
           {/* User menu */}
@@ -194,7 +203,7 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
               className="flex min-h-10 items-center gap-2 rounded-full p-1 transition hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
               aria-haspopup="true"
               aria-expanded={userMenuOpen}
-              aria-label="Account menu"
+              aria-label={t('Account menu')}
               onClick={() => setUserMenuOpen((v) => !v)}
             >
               <span className="o-avatar h-8 w-8 text-[11px]">{initials(user?.name)}</span>
@@ -208,12 +217,12 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
                 <div className="o-menu-divider" />
                 <Link to="/settings" role="menuitem" className="o-menu-item">
                   <IconSettings className="h-4 w-4 text-ink-muted" />
-                  Settings
+                  {t('Settings')}
                 </Link>
                 {user?.is_super_admin && (
                   <Link to="/admin" role="menuitem" className="o-menu-item">
                     <IconShield className="h-4 w-4 text-ink-muted" />
-                    Administration
+                    {t('Administration')}
                   </Link>
                 )}
                 <div className="o-menu-divider" />
@@ -224,7 +233,7 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
                   onClick={() => void onLogout()}
                 >
                   <IconLogout className="h-4 w-4" />
-                  Log out
+                  {t('Log out')}
                 </button>
               </div>
             )}
@@ -241,12 +250,12 @@ export function AppLayout({ children, bleed }: { children: ReactNode; bleed?: bo
         {NAV.slice(0, 3).map((item) => (
           <NavLink key={item.to} to={item.to} className={({ isActive }) => `o-tab ${isActive ? 'is-active' : ''}`}>
             <item.icon className="h-5 w-5" />
-            {item.label === 'Family trees' ? 'Trees' : item.label}
+            {item.label === 'Family trees' ? t('Family trees') : t(item.label)}
           </NavLink>
         ))}
         <button type="button" onClick={() => setPaletteOpen(true)} className="o-tab">
           <IconSearch className="h-5 w-5" />
-          Search
+          {t('Search')}
         </button>
       </nav>
 

@@ -42,16 +42,22 @@ class AppServiceProvider extends ServiceProvider
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
     }
 
+    /**
+     * Step titles/CTAs are plain English on purpose: this response is consumed
+     * by the React SPA, which owns all UI translation (see web/src/core/i18n).
+     * Laravel's __() can't help here — it resolves at boot time, before any
+     * locale has been detected for the request.
+     */
     protected function configureOnboarding(): void
     {
-        Onboard::addStep(__('Create your first family tree'))
+        Onboard::addStep('Create your first family tree')
             ->link('/trees/manage')
-            ->cta(__('Go to tree management'))
+            ->cta('Go to tree management')
             ->completeIf(fn (User $user): bool => $user->familyTrees()->exists());
 
-        Onboard::addStep(__('Add your first family member'))
+        Onboard::addStep('Add your first family member')
             ->link('/trees/my')
-            ->cta(__('Open my tree'))
+            ->cta('Open my tree')
             ->completeIf(fn (User $user): bool => $user->people()->exists());
     }
 

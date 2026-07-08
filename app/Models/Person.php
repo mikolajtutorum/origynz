@@ -12,9 +12,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property int $id
- * @property int $family_tree_id
- * @property int $created_by
+ * @property string $id
+ * @property string $family_tree_id
+ * @property string $created_by
  * @property string $given_name
  * @property string|null $middle_name
  * @property string|null $alternative_name

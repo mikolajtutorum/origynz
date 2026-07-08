@@ -1,4 +1,5 @@
 import type { TokenStorage } from '../auth/storage';
+import { getActiveLang, translate } from '../i18n/translate';
 
 // Platform-agnostic API client. Uses the standard `fetch` API (available in the
 // browser and in React Native), reads the bearer token from an injected
@@ -69,6 +70,19 @@ function safeJson(text: string): unknown {
   }
 }
 
+/** Translate Laravel's { errors: { field: string[] } } validation messages in place. */
+function translateErrorPayload(payload: unknown, lang: Parameters<typeof translate>[0]): unknown {
+  if (!payload || typeof payload !== 'object') return payload;
+  const { errors } = payload as { errors?: Record<string, string[]> };
+  if (!errors) return payload;
+
+  const translated: Record<string, string[]> = {};
+  for (const [field, messages] of Object.entries(errors)) {
+    translated[field] = messages.map((m) => translate(lang, m));
+  }
+  return { ...payload, errors: translated };
+}
+
 function buildUrl(baseUrl: string, path: string): URL {
   const trimmedBase = baseUrl.trim();
   if (!trimmedBase && typeof window !== 'undefined') {
@@ -118,9 +132,12 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const payload = text ? safeJson(text) : null;
 
   if (!res.ok) {
-    const message =
+    // The API always emits fixed, canonical English text (see AppServiceProvider,
+    // API controllers) — the SPA is the single source of translation for it.
+    const lang = getActiveLang();
+    const rawMessage =
       (payload as { message?: string } | null)?.message ?? res.statusText ?? 'Request failed';
-    throw new ApiError(res.status, message, payload);
+    throw new ApiError(res.status, translate(lang, rawMessage), translateErrorPayload(payload, lang));
   }
 
   return payload as T;

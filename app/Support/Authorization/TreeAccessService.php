@@ -60,6 +60,31 @@ class TreeAccessService
         });
     }
 
+    /**
+     * Set a user's access on a tree to exactly $level (may downgrade, unlike
+     * grantTreeAccess which only ever escalates).
+     */
+    public function setTreeAccessLevel(User $user, FamilyTree $tree, TreeAccessLevel $level): void
+    {
+        $this->ensureBaseRecordsExist();
+
+        $this->forTree($user, $tree, function () use ($user, $level): void {
+            $user->syncPermissions($level->permissions());
+            $user->unsetRelation('permissions');
+        });
+    }
+
+    /**
+     * Remove all of a user's access to a tree.
+     */
+    public function revokeTreeAccess(User $user, FamilyTree $tree): void
+    {
+        $this->forTree($user, $tree, function () use ($user): void {
+            $user->syncPermissions([]);
+            $user->unsetRelation('permissions');
+        });
+    }
+
     public function getTreeAccessLevel(User $user, FamilyTree $tree): ?TreeAccessLevel
     {
         if ($this->hasSiteRole($user, [SiteRole::SuperAdmin, SiteRole::Admin])) {

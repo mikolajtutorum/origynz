@@ -8,6 +8,7 @@ import { TreeWorkspace } from '../pages/TreeWorkspace';
 import { MediaLibrary } from '../pages/MediaLibrary';
 import { GedcomImport } from '../pages/GedcomImport';
 import { RelationshipCalculator } from '../pages/RelationshipCalculator';
+import { Duplicates } from '../pages/Duplicates';
 import { Settings } from '../pages/Settings';
 import { Admin } from '../pages/Admin';
 import { NotFound } from '../pages/NotFound';
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: '/media', element: <MediaLibrary /> },
       { path: '/import', element: <GedcomImport /> },
       { path: '/relationship-calculator', element: <RelationshipCalculator /> },
+      { path: '/duplicates', element: <Duplicates /> },
       { path: '/settings', element: <Settings /> },
     ],
   },

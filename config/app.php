@@ -118,6 +118,14 @@ return [
             'direction' => 'ltr',
             'countries' => ['PL'],
         ],
+        'ru' => [
+            'flag' => '🇷🇺',
+            'short' => 'RU',
+            'label' => 'Русский',
+            'native' => 'Russian',
+            'direction' => 'ltr',
+            'countries' => ['RU', 'BY', 'KZ', 'KG', 'TJ', 'TM', 'UZ'],
+        ],
         'ar' => [
             'flag' => '🇸🇦',
             'short' => 'AR',

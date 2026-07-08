@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useT } from '@core/i18n';
 import { applyTheme, currentTheme, type Theme } from '../lib/theme';
 
 export function ThemeToggle({ className = '' }: { className?: string }) {
+  const t = useT();
   const [theme, setTheme] = useState<Theme>(() => currentTheme());
 
   const toggle = () => {
@@ -15,8 +17,8 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       type="button"
       onClick={toggle}
       className={`flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition hover:bg-fill hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 ${className}`}
-      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+      aria-label={theme === 'dark' ? t('Switch to light mode') : t('Switch to dark mode')}
+      title={theme === 'dark' ? t('Light mode') : t('Dark mode')}
     >
       {theme === 'dark' ? (
         // Sun

@@ -4,10 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerSchema, type RegisterValues } from '@core/validation/auth';
 import { useRegister } from '@core/auth/hooks';
+import { useT } from '@core/i18n';
 import { AuthCard, Button, Checkbox, FormError, TextField } from '../components/ui';
 import { applyApiErrors } from '../lib/applyApiErrors';
 
 export function Register() {
+  const t = useT();
   const navigate = useNavigate();
   const registerUser = useRegister();
   const [formError, setFormError] = useState<string | null>(null);
@@ -27,31 +29,31 @@ export function Register() {
   });
 
   return (
-    <AuthCard title="Create your account" subtitle="Start your family tree in minutes — free">
+    <AuthCard title={t('Create your account')} subtitle={t('Start your family tree in minutes — free')}>
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <FormError message={formError} />
         <TextField
-          label="Name"
+          label={t('Name')}
           autoComplete="name"
           error={formState.errors.name?.message}
           {...register('name')}
         />
         <TextField
-          label="Email"
+          label={t('Email')}
           type="email"
           autoComplete="email"
           error={formState.errors.email?.message}
           {...register('email')}
         />
         <TextField
-          label="Password"
+          label={t('Password')}
           type="password"
           autoComplete="new-password"
           error={formState.errors.password?.message}
           {...register('password')}
         />
         <TextField
-          label="Confirm password"
+          label={t('Confirm password')}
           type="password"
           autoComplete="new-password"
           error={formState.errors.password_confirmation?.message}
@@ -60,13 +62,13 @@ export function Register() {
         <Checkbox
           label={
             <>
-              I agree to the{' '}
+              {t('I agree to the')}{' '}
               <Link to="/terms-of-service" className="font-medium text-accent underline decoration-emerald-400/40 underline-offset-2">
-                Terms
+                {t('Terms')}
               </Link>{' '}
-              and{' '}
+              {t('and')}{' '}
               <Link to="/privacy-policy" className="font-medium text-accent underline decoration-emerald-400/40 underline-offset-2">
-                Privacy Policy
+                {t('Privacy Policy')}
               </Link>
               .
             </>
@@ -75,18 +77,18 @@ export function Register() {
           {...register('terms')}
         />
         <Checkbox
-          label="I confirm I am 13 years of age or older."
+          label={t('I confirm I am 13 years of age or older.')}
           error={formState.errors.age_confirmation?.message}
           {...register('age_confirmation')}
         />
         <Button type="submit" loading={registerUser.isPending}>
-          Create account
+          {t('Create account')}
         </Button>
       </form>
       <p className="mt-5 text-center text-sm text-ink-muted">
-        Already have an account?{' '}
+        {t('Already have an account?')}{' '}
         <Link to="/login" className="font-medium text-accent underline decoration-emerald-400/40 underline-offset-2 hover:text-accent-strong">
-          Sign in
+          {t('Sign in')}
         </Link>
       </p>
     </AuthCard>

@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\DnaKitController;
 use App\Http\Controllers\Api\V1\GedcomController as ApiGedcomController;
 use App\Http\Controllers\Api\V1\GlobalTreeController;
+use App\Http\Controllers\Api\V1\IntegrationController;
+use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MediaController;
+use App\Http\Controllers\Api\V1\MergeController;
 use App\Http\Controllers\Api\V1\PersonController;
 use App\Http\Controllers\Api\V1\PhotoRequestController;
 use App\Http\Controllers\Api\V1\ProfileClaimController;
@@ -14,6 +18,8 @@ use App\Http\Controllers\Api\V1\RelationshipController;
 use App\Http\Controllers\Api\V1\Settings\ApiTokenController;
 use App\Http\Controllers\Api\V1\Settings\ProfileController;
 use App\Http\Controllers\Api\V1\Settings\TwoFactorController;
+use App\Http\Controllers\Api\V1\SourceController;
+use App\Http\Controllers\Api\V1\TreeCollaborationController;
 use App\Http\Controllers\Api\V1\TreeController;
 use App\Http\Controllers\DSARController;
 use App\Http\Controllers\GedcomController;
@@ -26,6 +32,12 @@ Route::get('v1/health', fn () => response()->json([
     'app' => config('app.name'),
     'time' => now()->toIso8601String(),
 ]))->name('api.v1.health');
+
+// Public locale hint from IP geo (edge headers) — used by the SPA to pick a
+// default language before the user is authenticated.
+Route::get('v1/locale', [LocaleController::class, 'suggest'])
+    ->middleware('throttle:30,1')
+    ->name('api.v1.locale');
 
 // Public media streaming, protected by a temporary signed URL so the SPA can use
 // it directly as an <img> src (no bearer token is sent on image requests).
@@ -60,6 +72,16 @@ Route::prefix('v1')
         Route::get('trees/{tree}/graph', [TreeController::class, 'graph'])->name('trees.graph');
         Route::get('trees/{tree}/members', [TreeController::class, 'members'])->name('trees.members');
 
+        // Tree collaboration — invitations, join requests, member management
+        Route::get('trees/{tree}/invitations', [TreeCollaborationController::class, 'invitations'])->name('trees.invitations.index');
+        Route::post('trees/{tree}/invitations', [TreeCollaborationController::class, 'invite'])->name('trees.invitations.store');
+        Route::delete('invitations/{invitation}', [TreeCollaborationController::class, 'revokeInvitation'])->name('invitations.destroy');
+        Route::get('trees/{tree}/membership-requests', [TreeCollaborationController::class, 'membershipRequests'])->name('trees.membership-requests.index');
+        Route::post('trees/{tree}/membership-requests', [TreeCollaborationController::class, 'requestMembership'])->name('trees.membership-requests.store');
+        Route::patch('membership-requests/{membershipRequest}', [TreeCollaborationController::class, 'reviewMembershipRequest'])->name('membership-requests.review');
+        Route::patch('trees/{tree}/members/{user}', [TreeCollaborationController::class, 'updateMember'])->name('trees.members.update');
+        Route::delete('trees/{tree}/members/{user}', [TreeCollaborationController::class, 'removeMember'])->name('trees.members.destroy');
+
         // People (write ops scoped to a tree; reads + mutations by person id)
         Route::get('people/search', [PersonController::class, 'search'])->name('people.search');
         Route::post('trees/{tree}/people', [PersonController::class, 'store'])->name('trees.people.store');
@@ -74,6 +96,15 @@ Route::prefix('v1')
         Route::post('trees/{tree}/relationships', [RelationshipController::class, 'store'])->name('trees.relationships.store');
         Route::patch('trees/{tree}/relationships/{relationship}', [RelationshipController::class, 'update'])->name('trees.relationships.update');
         Route::delete('trees/{tree}/relationships/{relationship}', [RelationshipController::class, 'destroy'])->name('trees.relationships.destroy');
+
+        // Sources & citations
+        Route::get('trees/{tree}/sources', [SourceController::class, 'index'])->name('trees.sources.index');
+        Route::post('trees/{tree}/sources', [SourceController::class, 'store'])->name('trees.sources.store');
+        Route::patch('sources/{source}', [SourceController::class, 'update'])->name('sources.update');
+        Route::delete('sources/{source}', [SourceController::class, 'destroy'])->name('sources.destroy');
+        Route::get('people/{person}/citations', [SourceController::class, 'citations'])->name('people.citations.index');
+        Route::post('people/{person}/citations', [SourceController::class, 'storeCitation'])->name('people.citations.store');
+        Route::delete('citations/{citation}', [SourceController::class, 'destroyCitation'])->name('citations.destroy');
 
         // GEDCOM import (async) + export
         Route::post('gedcom/import', [ApiGedcomController::class, 'importNew'])->name('gedcom.import');
@@ -90,6 +121,27 @@ Route::prefix('v1')
 
         // Global tree
         Route::post('global-tree/relationship', [GlobalTreeController::class, 'relationshipPath'])->name('global-tree.relationship');
+
+        // Third-party integrations (FamilySearch / WikiTree / Geni) + research links
+        Route::get('integrations', [IntegrationController::class, 'index'])->name('integrations.index');
+        Route::post('integrations/wikitree', [IntegrationController::class, 'connectWikiTree'])->name('integrations.wikitree');
+        Route::post('integrations/{provider}/authorize', [IntegrationController::class, 'authorize'])->name('integrations.authorize');
+        Route::delete('integrations/{provider}', [IntegrationController::class, 'destroy'])->name('integrations.destroy');
+        Route::get('people/{person}/research-links', [IntegrationController::class, 'researchLinks'])->name('people.research-links');
+
+        // DNA kits
+        Route::get('dna-kits', [DnaKitController::class, 'index'])->name('dna-kits.index');
+        Route::post('dna-kits', [DnaKitController::class, 'store'])->name('dna-kits.store');
+        Route::patch('dna-kits/{dnaKit}', [DnaKitController::class, 'update'])->name('dna-kits.update');
+        Route::delete('dna-kits/{dnaKit}', [DnaKitController::class, 'destroy'])->name('dna-kits.destroy');
+
+        // Duplicate detection & person merge
+        Route::get('trees/{tree}/merge-candidates', [MergeController::class, 'treeCandidates'])->name('trees.merge-candidates');
+        Route::post('trees/{tree}/merge-candidates/scan', [MergeController::class, 'scanTree'])->name('trees.merge-candidates.scan');
+        Route::get('merge-candidates/suggestions', [MergeController::class, 'suggestions'])->name('merge-candidates.suggestions');
+        Route::get('merge-candidates/{candidate}/preview', [MergeController::class, 'preview'])->name('merge-candidates.preview');
+        Route::post('merge-candidates/{candidate}/merge', [MergeController::class, 'merge'])->name('merge-candidates.merge');
+        Route::post('merge-candidates/{candidate}/dismiss', [MergeController::class, 'dismiss'])->name('merge-candidates.dismiss');
 
         // Account settings
         Route::patch('settings/profile', [ProfileController::class, 'update'])->name('settings.profile');

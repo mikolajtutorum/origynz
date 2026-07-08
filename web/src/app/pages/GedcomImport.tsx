@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gedcomApi, type ImportProgress, type ImportStage } from '@core/api/endpoints/gedcom';
 import { useTrees } from '@core/queries/trees';
+import { useT } from '@core/i18n';
 import { AppLayout } from '../components/AppLayout';
 import { Button, FormError, Select, TextField } from '../components/ui';
 
@@ -58,6 +59,7 @@ function StageRow({ state, label, hint, detail }: { state: 'done' | 'active' | '
 }
 
 export function GedcomImport() {
+  const t = useT();
   const navigate = useNavigate();
   const { data: trees } = useTrees();
 
@@ -118,7 +120,7 @@ export function GedcomImport() {
         status: 'queued',
         stage: 'queued',
         progress: 0,
-        message: 'Queued…',
+        message: t('Queued…'),
         current: null,
         total: null,
         tree_id: started.tree_id,
@@ -140,11 +142,10 @@ export function GedcomImport() {
   return (
     <AppLayout>
       <header className="max-w-2xl space-y-2">
-        <p className="o-eyebrow">GEDCOM import</p>
-        <h1 className="o-display text-3xl sm:text-4xl">Bring your research with you.</h1>
+        <p className="o-eyebrow">{t('GEDCOM import')}</p>
+        <h1 className="o-display text-3xl sm:text-4xl">{t('Bring your research with you.')}</h1>
         <p className="text-[15px] leading-7 text-ink-muted">
-          Upload a .ged file from MyHeritage, Ancestry, FamilySearch, or any other genealogy tool to create or
-          extend a family tree — people, relationships, and photos included.
+          {t('Upload a .ged file from MyHeritage, Ancestry, FamilySearch, or any other genealogy tool to create or extend a family tree — people, relationships, and photos included.')}
         </p>
       </header>
 
@@ -153,7 +154,7 @@ export function GedcomImport() {
           <div className="flex flex-col gap-4">
             <FormError message={error} />
             <div className="flex flex-col gap-1.5">
-              <label className="o-label">GEDCOM file</label>
+              <label className="o-label">{t('GEDCOM file')}</label>
               <input
                 type="file"
                 accept=".ged,.gedcom,text/plain"
@@ -161,31 +162,31 @@ export function GedcomImport() {
                 className="o-input"
               />
             </div>
-            <Select label="Destination" value={target} onChange={(e) => setTarget(e.target.value)}>
-              <option value="new">Create a new tree</option>
-              {trees?.map((t) => (
-                <option key={t.id} value={t.id}>
-                  Import into: {t.name}
+            <Select label={t('Destination')} value={target} onChange={(e) => setTarget(e.target.value)}>
+              <option value="new">{t('Create a new tree')}</option>
+              {trees?.map((tree) => (
+                <option key={tree.id} value={tree.id}>
+                  {t('Import into: {name}', { name: tree.name })}
                 </option>
               ))}
             </Select>
             {target === 'new' && (
               <TextField
-                label="New tree name (optional)"
+                label={t('New tree name (optional)')}
                 value={treeName}
                 onChange={(e) => setTreeName(e.target.value)}
-                placeholder="Defaults to the file name"
+                placeholder={t('Defaults to the file name')}
               />
             )}
             <Button onClick={submit} disabled={!file} loading={submitting}>
-              Start import
+              {t('Start import')}
             </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <div className="flex items-baseline justify-between gap-3">
-                <p className="text-sm font-medium text-ink">{progress?.message}</p>
+                <p className="text-sm font-medium text-ink">{progress?.message ? t(progress.message) : null}</p>
                 <span className="text-sm tabular-nums text-ink-muted">{pct}%</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-paper-deep">
@@ -196,7 +197,7 @@ export function GedcomImport() {
               </div>
               {progress?.total != null && progress.total > 0 && progress.stage === 'people' && (
                 <p className="text-xs text-ink-muted">
-                  {progress.current ?? 0} of {progress.total} people processed
+                  {t('{current} of {total} people processed', { current: progress.current ?? 0, total: progress.total })}
                 </p>
               )}
             </div>
@@ -205,31 +206,33 @@ export function GedcomImport() {
               {queued && (
                 <li className="flex items-center gap-3 text-sm text-ink-muted">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-edge border-t-emerald-400" />
-                  Waiting for a worker to pick up the import…
+                  {t('Waiting for a worker to pick up the import…')}
                 </li>
               )}
               {STAGES.map((s, i) => {
                 const state = done || i < activeIndex ? 'done' : i === activeIndex ? 'active' : 'pending';
                 const detail =
                   s.key === 'people' && i === activeIndex && progress?.total
-                    ? `${progress.current ?? 0} of ${progress.total} people`
+                    ? t('{current} of {total} people', { current: progress.current ?? 0, total: progress.total })
                     : undefined;
-                return <StageRow key={s.key} state={state} label={s.label} hint={s.hint} detail={detail} />;
+                return <StageRow key={s.key} state={state} label={t(s.label)} hint={t(s.hint)} detail={detail} />;
               })}
             </ol>
 
             {done && (
               <p className="text-sm font-medium text-accent">
                 {progress?.people_created != null
-                  ? `Added ${progress.people_created} people and ${progress.relationships_created ?? 0} relationships. `
+                  ? t('Added {people} people and {rels} relationships. ', {
+                      people: progress.people_created,
+                      rels: progress.relationships_created ?? 0,
+                    })
                   : ''}
-                Opening your tree…
+                {t('Opening your tree…')}
               </p>
             )}
             {!done && (
               <p className="text-xs leading-5 text-ink-muted">
-                Photos and other media linked to external URLs continue downloading in the background after the import
-                finishes.
+                {t('Photos and other media linked to external URLs continue downloading in the background after the import finishes.')}
               </p>
             )}
           </div>

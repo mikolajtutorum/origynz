@@ -118,3 +118,14 @@ export function IconUser({ className = 'h-[18px] w-[18px]' }: { className?: stri
     </svg>
   );
 }
+
+export function IconMerge({ className = 'h-[18px] w-[18px]' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" {...stroke}>
+      <path d="M7 3v6a5 5 0 0 0 5 5 5 5 0 0 1 5 5v2" />
+      <path d="M17 3v2a5 5 0 0 1-5 5" />
+      <path d="m4 6 3-3 3 3" />
+      <path d="m14 6 3-3 3 3" />
+    </svg>
+  );
+}

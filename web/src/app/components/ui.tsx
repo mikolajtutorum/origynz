@@ -7,7 +7,9 @@ import type {
 } from 'react';
 import { forwardRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useT } from '@core/i18n';
 import { LogoMark } from './AppLayout';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export const TextField = forwardRef<
   HTMLInputElement,
@@ -81,11 +83,12 @@ export function Button({
   variant = 'primary',
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean; variant?: 'primary' | 'secondary' | 'danger' }) {
+  const t = useT();
   const cls =
     variant === 'secondary' ? 'o-btn-secondary' : variant === 'danger' ? 'o-btn-danger' : 'o-btn-primary';
   return (
     <button className={cls} disabled={loading || props.disabled} {...props}>
-      {loading ? 'Please wait…' : children}
+      {loading ? t('Please wait…') : children}
     </button>
   );
 }
@@ -135,7 +138,10 @@ export function Modal({
 
 export function AuthCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-paper px-4 py-10">
+    <main className="relative flex min-h-screen flex-col items-center justify-center bg-paper px-4 py-10">
+      <div className="absolute end-4 top-4">
+        <LanguageSwitcher />
+      </div>
       <Link to="/" className="mb-7 flex items-center gap-3" aria-label="Origynz home">
         <LogoMark />
         <span className="font-display text-[26px] font-semibold tracking-tight text-ink">Origynz</span>

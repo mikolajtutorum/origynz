@@ -18,10 +18,10 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @property int $id
- * @property int $user_id
- * @property int|null $site_id
- * @property int|null $owner_person_id
+ * @property string $id
+ * @property string $user_id
+ * @property string|null $site_id
+ * @property string|null $owner_person_id
  * @property string $name
  * @property string|null $description
  * @property string|null $home_region

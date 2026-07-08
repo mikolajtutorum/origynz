@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { peopleApi } from '@core/api/endpoints/people';
 import type { Person } from '@core/models';
+import { useT } from '@core/i18n';
 
 // Debounced person search with a result dropdown. Used by the relationship calculator.
 export function PersonSearchInput({
@@ -16,6 +17,7 @@ export function PersonSearchInput({
   treeId?: string;
   excludeId?: string;
 }) {
+  const t = useT();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Person[]>([]);
   const [open, setOpen] = useState(false);
@@ -71,7 +73,7 @@ export function PersonSearchInput({
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search people…"
+        placeholder={t('Search people…')}
         className="o-input"
       />
       {open && results.length > 0 && (

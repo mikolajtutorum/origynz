@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\MergeCandidateStatus;
+use App\Models\FamilyTree;
 use App\Models\MergeCandidate;
 use App\Models\Person;
 use Illuminate\Support\Collection;
@@ -60,6 +61,64 @@ class DuplicateDetectionService
 
                     if ($existing) {
                         $existing->update(['similarity_score' => $score]);
+                    } else {
+                        MergeCandidate::create([
+                            'person_a_id' => $idA,
+                            'person_b_id' => $idB,
+                            'similarity_score' => $score,
+                            'status' => MergeCandidateStatus::Pending,
+                        ]);
+                        $created++;
+                    }
+                }
+            }
+        }
+
+        return $created;
+    }
+
+    /**
+     * Scan a single tree for likely-duplicate people *within* the same tree
+     * (the case GEDCOM imports routinely produce). Persists/refreshes pending
+     * MergeCandidate records and returns the count of new candidates created.
+     */
+    public function scanTree(FamilyTree $tree): int
+    {
+        $people = $tree->people()
+            ->whereNull('merged_into_id')
+            ->get(['id', 'family_tree_id', 'given_name', 'surname', 'birth_date', 'birth_date_text', 'birth_place', 'sex']);
+
+        $created = 0;
+
+        // Group roughly by first letter of surname + sex to limit comparisons.
+        $buckets = $people->groupBy(fn (Person $p) => strtolower(substr($p->surname ?? '', 0, 1)).'_'.$p->sex);
+
+        foreach ($buckets as $bucket) {
+            /** @var Collection<int, Person> $bucket */
+            $items = $bucket->values();
+            $count = $items->count();
+
+            for ($i = 0; $i < $count; $i++) {
+                for ($j = $i + 1; $j < $count; $j++) {
+                    $a = $items[$i];
+                    $b = $items[$j];
+
+                    $score = $this->similarity($a, $b);
+                    if ($score < self::MIN_SCORE) {
+                        continue;
+                    }
+
+                    [$idA, $idB] = strcmp($a->id, $b->id) < 0 ? [$a->id, $b->id] : [$b->id, $a->id];
+
+                    $existing = MergeCandidate::where('person_a_id', $idA)
+                        ->where('person_b_id', $idB)
+                        ->first();
+
+                    if ($existing) {
+                        // Never resurrect a candidate the user already resolved.
+                        if ($existing->status === MergeCandidateStatus::Pending) {
+                            $existing->update(['similarity_score' => $score]);
+                        }
                     } else {
                         MergeCandidate::create([
                             'person_a_id' => $idA,

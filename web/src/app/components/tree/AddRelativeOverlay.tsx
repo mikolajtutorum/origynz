@@ -1,5 +1,6 @@
 import type { RelationRole } from '@core/api/endpoints/people';
 import type { Person } from '@core/models';
+import { useT } from '@core/i18n';
 
 // Add-relative chooser. Desktop: radial layout with the anchor person in the
 // middle and relatives around them. Mobile: a bottom action sheet with the
@@ -42,6 +43,7 @@ function PersonGlyph() {
 }
 
 function RelativeButton({ slot, onChoose }: { slot: Slot; onChoose: (role: RelationRole) => void }) {
+  const t = useT();
   return (
     <button
       type="button"
@@ -52,7 +54,7 @@ function RelativeButton({ slot, onChoose }: { slot: Slot; onChoose: (role: Relat
       <span className="gen-relative-btn-icon">
         <PersonGlyph />
       </span>
-      {slot.label}
+      {t(slot.label)}
     </button>
   );
 }
@@ -87,6 +89,7 @@ export function AddRelativeOverlay({
   onChoose: (role: RelationRole) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <div className="fixed inset-0 z-50 bg-[#1c1f24]/[0.92]" onClick={onClose}>
       {/* ── Desktop: radial chooser ── */}
@@ -96,7 +99,7 @@ export function AddRelativeOverlay({
           onClick={onClose}
           className="absolute left-1/2 top-7 flex -translate-x-1/2 items-center gap-2 text-[15px] text-white/80 hover:text-white"
         >
-          Close <span className="text-xl leading-none">×</span>
+          {t('Close')} <span className="text-xl leading-none">×</span>
         </button>
 
         <div className="flex flex-col items-center gap-5" onClick={(e) => e.stopPropagation()}>
@@ -131,7 +134,7 @@ export function AddRelativeOverlay({
         className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-[0_-16px_48px_rgba(0,0,0,.35)] sm:hidden"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
-        aria-label={`Add a relative of ${anchor.display_name}`}
+        aria-label={t('Add a relative of {name}', { name: anchor.display_name })}
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#d9dde2]" />
         <div className="mb-3 flex items-center justify-between gap-3">
@@ -140,12 +143,12 @@ export function AddRelativeOverlay({
             type="button"
             onClick={onClose}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f1f3f5] text-xl leading-none text-[#4a5560]"
-            aria-label="Close"
+            aria-label={t('Close')}
           >
             ×
           </button>
         </div>
-        <p className="mb-2 px-1 text-[13px] font-medium text-[#6b7682]">Add a relative</p>
+        <p className="mb-2 px-1 text-[13px] font-medium text-[#6b7682]">{t('Add a relative')}</p>
         <div className="flex flex-col gap-2">
           {SHEET_ORDER.map((slot) => (
             <button
@@ -158,7 +161,7 @@ export function AddRelativeOverlay({
               <span className="gen-relative-btn-icon">
                 <PersonGlyph />
               </span>
-              {slot.label}
+              {t(slot.label)}
             </button>
           ))}
         </div>

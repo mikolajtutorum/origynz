@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi, SITE_ROLES } from '@core/api/endpoints/admin';
+import { useT } from '@core/i18n';
 import { AppLayout } from '../components/AppLayout';
 import { FullScreenSpinner } from '../components/Spinner';
 
@@ -8,12 +9,13 @@ const TABS = ['Dashboard', 'Users', 'Trees', 'Activity'] as const;
 type Tab = (typeof TABS)[number];
 
 function Dashboard() {
+  const t = useT();
   const { data, isLoading } = useQuery({ queryKey: ['admin', 'dashboard'], queryFn: adminApi.dashboard });
   if (isLoading || !data) return <FullScreenSpinner />;
   const cards = [
-    { label: 'Users', value: data.users },
-    { label: 'Trees', value: data.trees },
-    { label: 'People', value: data.people },
+    { label: t('Users'), value: data.users },
+    { label: t('Trees'), value: data.trees },
+    { label: t('People'), value: data.people },
   ];
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -28,6 +30,7 @@ function Dashboard() {
 }
 
 function Users() {
+  const t = useT();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const { data: users, isLoading } = useQuery({ queryKey: ['admin', 'users', search], queryFn: () => adminApi.users(search) });
@@ -37,17 +40,17 @@ function Users() {
 
   return (
     <div>
-      <input placeholder="Search users…" value={search} onChange={(e) => setSearch(e.target.value)} className="o-input mb-4 max-w-xs rounded-full" />
+      <input placeholder={t('Search users…')} value={search} onChange={(e) => setSearch(e.target.value)} className="o-input mb-4 max-w-xs rounded-full" />
       {isLoading ? (
         <FullScreenSpinner />
       ) : (
         <table className="o-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Trees</th>
-              <th>Role</th>
+              <th>{t('Name')}</th>
+              <th>{t('Email')}</th>
+              <th>{t('Trees')}</th>
+              <th>{t('Role')}</th>
               <th></th>
             </tr>
           </thead>
@@ -65,17 +68,17 @@ function Users() {
                   >
                     {SITE_ROLES.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {t(r)}
                       </option>
                     ))}
                   </select>
                 </td>
                 <td className="text-right">
                   <button
-                    onClick={() => window.confirm(`Delete ${u.name}?`) && remove.mutate(u.id)}
+                    onClick={() => window.confirm(t('Delete {name}?', { name: u.name })) && remove.mutate(u.id)}
                     className="text-xs font-medium text-danger hover:text-danger-strong hover:underline"
                   >
-                    Delete
+                    {t('Delete')}
                   </button>
                 </td>
               </tr>
@@ -88,6 +91,7 @@ function Users() {
 }
 
 function Trees() {
+  const t = useT();
   const qc = useQueryClient();
   const { data: trees, isLoading } = useQuery({ queryKey: ['admin', 'trees'], queryFn: adminApi.trees });
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin', 'trees'] });
@@ -99,27 +103,27 @@ function Trees() {
     <table className="o-table">
       <thead>
         <tr>
-          <th>Tree</th>
-          <th>Owner</th>
-          <th>People</th>
-          <th>Global</th>
+          <th>{t('Tree')}</th>
+          <th>{t('Owner')}</th>
+          <th>{t('People')}</th>
+          <th>{t('Global')}</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        {trees?.map((t) => (
-          <tr key={t.id}>
-            <td className="font-medium text-ink">{t.name}</td>
-            <td className="text-ink-muted">{t.owner}</td>
-            <td>{t.people_count}</td>
+        {trees?.map((row) => (
+          <tr key={row.id}>
+            <td className="font-medium text-ink">{row.name}</td>
+            <td className="text-ink-muted">{row.owner}</td>
+            <td>{row.people_count}</td>
             <td>
-              <button onClick={() => toggle.mutate(t.id)} className={t.global_tree_enabled ? 'o-chip-brand' : 'o-chip-muted'}>
-                {t.global_tree_enabled ? 'On' : 'Off'}
+              <button onClick={() => toggle.mutate(row.id)} className={row.global_tree_enabled ? 'o-chip-brand' : 'o-chip-muted'}>
+                {row.global_tree_enabled ? t('On') : t('Off')}
               </button>
             </td>
             <td className="text-right">
-              <button onClick={() => window.confirm(`Delete ${t.name}?`) && remove.mutate(t.id)} className="text-xs font-medium text-danger hover:text-danger-strong hover:underline">
-                Delete
+              <button onClick={() => window.confirm(t('Delete {name}?', { name: row.name })) && remove.mutate(row.id)} className="text-xs font-medium text-danger hover:text-danger-strong hover:underline">
+                {t('Delete')}
               </button>
             </td>
           </tr>
@@ -130,6 +134,7 @@ function Trees() {
 }
 
 function Activity() {
+  const t = useT();
   const { data, isLoading } = useQuery({ queryKey: ['admin', 'activity'], queryFn: adminApi.activity });
   if (isLoading) return <FullScreenSpinner />;
   return (
@@ -137,33 +142,41 @@ function Activity() {
       {data?.map((a) => (
         <li key={a.id} className="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
           <span className="text-ink-soft">{a.description ?? a.event}</span>
-          <span className="text-ink-muted">{a.causer ?? 'system'} · {a.created_at?.slice(0, 10)}</span>
+          <span className="text-ink-muted">{a.causer ?? t('system')} · {a.created_at?.slice(0, 10)}</span>
         </li>
       ))}
     </ul>
   );
 }
 
+const TAB_LABELS: Record<Tab, string> = {
+  Dashboard: 'Dashboard',
+  Users: 'Users',
+  Trees: 'Trees',
+  Activity: 'Activity',
+};
+
 export function Admin() {
+  const t = useT();
   const [tab, setTab] = useState<Tab>('Dashboard');
   return (
     <AppLayout>
       <div className="space-y-7">
         <header className="max-w-2xl space-y-2">
-          <p className="o-eyebrow">Site administration</p>
-          <h1 className="o-display text-3xl sm:text-4xl">Administration</h1>
+          <p className="o-eyebrow">{t('Site administration')}</p>
+          <h1 className="o-display text-3xl sm:text-4xl">{t('Administration')}</h1>
         </header>
 
-        <div className="o-subnav" role="tablist" aria-label="Admin sections">
-          {TABS.map((t) => (
+        <div className="o-subnav" role="tablist" aria-label={t('Administration')}>
+          {TABS.map((tabKey) => (
             <button
-              key={t}
+              key={tabKey}
               role="tab"
-              aria-selected={tab === t}
-              onClick={() => setTab(t)}
-              className={`o-subnav-link ${tab === t ? 'is-active' : ''}`}
+              aria-selected={tab === tabKey}
+              onClick={() => setTab(tabKey)}
+              className={`o-subnav-link ${tab === tabKey ? 'is-active' : ''}`}
             >
-              {t}
+              {t(TAB_LABELS[tabKey])}
             </button>
           ))}
         </div>

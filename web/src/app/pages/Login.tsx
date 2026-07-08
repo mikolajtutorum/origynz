@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { loginSchema, type LoginValues } from '@core/validation/auth';
 import { useLogin, useTwoFactorChallenge } from '@core/auth/hooks';
 import { isTwoFactorRequired } from '@core/api/endpoints/auth';
+import { useT } from '@core/i18n';
 import { AuthCard, Button, FormError, TextField } from '../components/ui';
 import { applyApiErrors } from '../lib/applyApiErrors';
 
@@ -13,6 +14,7 @@ interface FromState {
 }
 
 export function Login() {
+  const t = useT();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = (location.state as FromState)?.from?.pathname ?? '/dashboard';
@@ -51,24 +53,24 @@ export function Login() {
       await challenge.mutateAsync({ ...credentials, code });
       navigate(redirectTo, { replace: true });
     } catch (e) {
-      setFormError(e instanceof Error ? e.message : 'Invalid code.');
+      setFormError(e instanceof Error ? e.message : t('Invalid code.'));
     }
   };
 
   if (needsTwoFactor) {
     return (
-      <AuthCard title="Two-factor authentication" subtitle="Enter the code from your authenticator app">
+      <AuthCard title={t('Two-factor authentication')} subtitle={t('Enter the code from your authenticator app')}>
         <div className="flex flex-col gap-4">
           <FormError message={formError} />
           <TextField
-            label="Authentication code"
+            label={t('Authentication code')}
             inputMode="numeric"
             autoComplete="one-time-code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
           <Button onClick={submitTwoFactor} loading={challenge.isPending}>
-            Verify
+            {t('Verify')}
           </Button>
         </div>
       </AuthCard>
@@ -76,31 +78,31 @@ export function Login() {
   }
 
   return (
-    <AuthCard title="Welcome back" subtitle="Log in to continue your family research">
+    <AuthCard title={t('Welcome back')} subtitle={t('Log in to continue your family research')}>
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <FormError message={formError} />
         <TextField
-          label="Email"
+          label={t('Email')}
           type="email"
           autoComplete="email"
           error={formState.errors.email?.message}
           {...register('email')}
         />
         <TextField
-          label="Password"
+          label={t('Password')}
           type="password"
           autoComplete="current-password"
           error={formState.errors.password?.message}
           {...register('password')}
         />
         <Button type="submit" loading={login.isPending}>
-          Sign in
+          {t('Sign in')}
         </Button>
       </form>
       <p className="mt-5 text-center text-sm text-ink-muted">
-        No account?{' '}
+        {t('No account?')}{' '}
         <Link to="/register" className="font-medium text-accent underline decoration-emerald-400/40 underline-offset-2 hover:text-accent-strong">
-          Create one
+          {t('Create one')}
         </Link>
       </p>
     </AuthCard>

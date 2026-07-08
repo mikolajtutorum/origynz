@@ -4,8 +4,10 @@ import { peopleApi } from '@core/api/endpoints/people';
 import { mediaApi } from '@core/api/endpoints/media';
 import type { Person } from '@core/models';
 import type { FamilyGraph, FocusFamily } from '@core/tree/graph';
+import { useT } from '@core/i18n';
 import { kinshipToHome } from '../../lib/kinship';
 import { InteractionPanel } from './InteractionPanel';
+import { SourcesTab } from './SourcesTab';
 
 function Icon({ d, className = 'h-4 w-4' }: { d: string; className?: string }) {
   return (
@@ -84,7 +86,7 @@ function VitalRow({ d, label, value, sub }: { d: string; label: string; value: s
   );
 }
 
-type Tab = 'profile' | 'events' | 'photos' | 'community';
+type Tab = 'profile' | 'events' | 'photos' | 'sources' | 'community';
 
 // MyHeritage-style person panel: hero with kinship, action dock, and
 // Profile / Events / Photos / Community tabs. Desktop: static column beside
@@ -122,6 +124,7 @@ export function PersonPanel({
   onSetHome: () => void;
   onDelete: () => void;
 }) {
+  const t = useT();
   const [tab, setTab] = useState<Tab>('profile');
   const [moreOpen, setMoreOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -187,10 +190,11 @@ export function PersonPanel({
   const eventCount = (profile?.events.length ?? 0) + (profile?.relationship_facts.length ?? 0);
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
-    { key: 'profile', label: 'Profile' },
-    { key: 'events', label: 'Events', count: eventCount },
-    { key: 'photos', label: 'Photos', count: photos?.length },
-    ...(showInteractions ? [{ key: 'community' as Tab, label: 'Community' }] : []),
+    { key: 'profile', label: t('Profile') },
+    { key: 'events', label: t('Events'), count: eventCount },
+    { key: 'photos', label: t('Photos'), count: photos?.length },
+    { key: 'sources', label: t('Sources') },
+    ...(showInteractions ? [{ key: 'community' as Tab, label: t('Community') }] : []),
   ];
 
   const moreMenuItems = (
@@ -203,7 +207,7 @@ export function PersonPanel({
           }}
           className="o-menu-item"
         >
-          Set as home person
+          {t('Set as home person')}
         </button>
       )}
       <button
@@ -213,7 +217,7 @@ export function PersonPanel({
         }}
         className="o-menu-item"
       >
-        Connect to existing person
+        {t('Connect to existing person')}
       </button>
       <button
         onClick={() => {
@@ -222,16 +226,16 @@ export function PersonPanel({
         }}
         className="o-menu-item text-danger hover:text-danger-strong"
       >
-        Remove from tree
+        {t('Remove from tree')}
       </button>
     </>
   );
 
   const familyGroups: { relation: string; people: Person[] }[] = [
-    { relation: person.sex === 'male' ? 'Father · Mother' : 'Parent', people: family.parents },
-    { relation: 'Sibling', people: family.siblings },
-    { relation: 'Partner', people: family.spouses },
-    { relation: 'Child', people: family.children },
+    { relation: person.sex === 'male' ? t('Father · Mother') : t('Parent'), people: family.parents },
+    { relation: t('Sibling'), people: family.siblings },
+    { relation: t('Partner'), people: family.spouses },
+    { relation: t('Child'), people: family.children },
   ];
 
   return (
@@ -242,7 +246,7 @@ export function PersonPanel({
           type="button"
           onClick={() => setMobileOpen(true)}
           className="fixed bottom-[4.5rem] left-3 z-30 flex max-w-[70vw] items-center gap-2.5 rounded-full border border-edge bg-elevated py-1.5 pl-1.5 pr-4 o-pop lg:hidden"
-          aria-label={`Open panel for ${person.display_name}`}
+          aria-label={t('Open panel for {name}', { name: person.display_name })}
         >
           <Avatar person={person} className="h-8 w-8 rounded-full text-xs" />
           <span className="truncate text-[13px] font-semibold text-ink">{person.display_name}</span>
@@ -253,7 +257,7 @@ export function PersonPanel({
         className={`relative flex w-[320px] min-w-[320px] max-w-[320px] flex-col border-r border-line bg-inset
           max-lg:fixed max-lg:inset-0 max-lg:z-50 max-lg:w-full max-lg:min-w-0 max-lg:max-w-none max-lg:border-r-0 max-lg:transition-transform max-lg:duration-200
           ${mobileOpen ? 'max-lg:translate-x-0' : 'max-lg:translate-x-full'}`}
-        aria-label={`Details for ${person.display_name}`}
+        aria-label={t('Details for {name}', { name: person.display_name })}
       >
         {/* ── Mobile page bar ── */}
         <div className="flex h-12 shrink-0 items-center gap-1 border-b border-line px-2 lg:hidden">
@@ -261,11 +265,11 @@ export function PersonPanel({
             type="button"
             onClick={closePanel}
             className="flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition hover:bg-fill"
-            aria-label="Back to tree"
+            aria-label={t('Back to tree')}
           >
             <Icon d="M19 12H5m7-7-7 7 7 7" className="h-5 w-5" />
           </button>
-          <span className="text-[15px] font-semibold text-ink">Profile</span>
+          <span className="text-[15px] font-semibold text-ink">{t('Profile')}</span>
           <span className="flex-1" />
           {canManage && (
             <div className="relative">
@@ -273,7 +277,7 @@ export function PersonPanel({
                 type="button"
                 onClick={() => setMoreOpen((v) => !v)}
                 className="flex h-10 w-10 items-center justify-center rounded-full text-ink-soft transition hover:bg-fill"
-                aria-label="More actions"
+                aria-label={t('More actions')}
                 aria-expanded={moreOpen}
               >
                 <Icon d="M12 5h.01M12 12h.01M12 19h.01" className="h-5 w-5" />
@@ -293,7 +297,7 @@ export function PersonPanel({
               <Avatar person={person} className={`h-16 w-16 rounded-2xl text-xl max-lg:h-20 max-lg:w-20 max-lg:rounded-3xl ${isOwner ? 'ring-2 ring-emerald-400' : ''}`} />
               {isOwner && (
                 <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-400 px-1.5 py-px text-[8px] font-bold uppercase tracking-wide text-emerald-950">
-                  Home
+                  {t('Home')}
                 </span>
               )}
             </div>
@@ -301,14 +305,14 @@ export function PersonPanel({
               <h2 className="font-display text-[17px] font-semibold leading-snug tracking-tight text-ink max-lg:text-[21px]">{person.display_name}</h2>
               {person.life_span && <p className="mt-0.5 text-[12px] text-ink-muted">{person.life_span}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                {isOwner && <span className="o-chip-brand">This is you</span>}
-                {kinship && <span className="o-chip-brand capitalize">{kinship.label}{home ? ` of ${home.given_name}` : ''}</span>}
-                <span className="o-chip-muted">{person.is_living ? 'Living' : 'Deceased'}</span>
+                {isOwner && <span className="o-chip-brand">{t('This is you')}</span>}
+                {kinship && <span className="o-chip-brand capitalize">{kinship.label}{home ? ` ${t('of {name}', { name: home.given_name })}` : ''}</span>}
+                <span className="o-chip-muted">{person.is_living ? t('Living') : t('Deceased')}</span>
               </div>
               {(person.birth_date_text || person.birth_date || person.birth_place) && (
                 <p className="mt-2 text-[12.5px] leading-5 text-ink-soft lg:hidden">
-                  Born: {person.birth_date_text || person.birth_date || 'Unknown'}
-                  {age !== null && person.is_living ? ` (Age ${age})` : ''}
+                  {t('Born')}: {person.birth_date_text || person.birth_date || t('Unknown')}
+                  {age !== null && person.is_living ? ` (${t('Age {age}', { age })})` : ''}
                   {person.birth_place ? ` · ${person.birth_place}` : ''}
                 </p>
               )}
@@ -319,12 +323,12 @@ export function PersonPanel({
 
           {/* ── Action dock ── */}
           <div className={`mt-3 grid gap-1 ${canManage ? 'grid-cols-4' : 'grid-cols-2'}`}>
-            {canManage && <ActionChip label="Edit" d="M4 20h4l9.8-9.8a2.1 2.1 0 0 0-3-3L5 17v3Z" onClick={onEdit} />}
+            {canManage && <ActionChip label={t('Edit')} d="M4 20h4l9.8-9.8a2.1 2.1 0 0 0-3-3L5 17v3Z" onClick={onEdit} />}
             {canManage && (
-              <ActionChip label="Add" d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4.5 18c1.2-2.8 3.1-4.2 5.5-4.2M19 8v6M16 11h6" onClick={onAddRelative} />
+              <ActionChip label={t('Add')} d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4.5 18c1.2-2.8 3.1-4.2 5.5-4.2M19 8v6M16 11h6" onClick={onAddRelative} />
             )}
-            {canManage && <ActionChip label="Photo" d="M4 7h3l2-2h6l2 2h3v12H4V7Zm8 9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" onClick={onEditPhoto} />}
-            <ActionChip label="Center" d="M12 3v4m0 10v4M3 12h4m10 0h4M12 12h.01" onClick={() => onPick(person.id)} />
+            {canManage && <ActionChip label={t('Photo')} d="M4 7h3l2-2h6l2 2h3v12H4V7Zm8 9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" onClick={onEditPhoto} />}
+            <ActionChip label={t('Center')} d="M12 3v4m0 10v4M3 12h4m10 0h4M12 12h.01" onClick={() => onPick(person.id)} />
           </div>
 
           {canManage && (
@@ -335,7 +339,7 @@ export function PersonPanel({
                 className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl py-1.5 text-[11px] font-medium text-ink-muted transition hover:bg-fill hover:text-ink"
                 aria-expanded={moreOpen}
               >
-                More actions
+                {t('More actions')}
                 <Icon d="m6 9 6 6 6-6" className="h-3 w-3" />
               </button>
               {moreOpen && (
@@ -373,38 +377,38 @@ export function PersonPanel({
             <div className="space-y-6">
               {/* Vitals */}
               <section>
-                <SectionLabel>Vital facts</SectionLabel>
+                <SectionLabel>{t('Vital facts')}</SectionLabel>
                 <div className="mt-1.5 divide-y divide-line/50">
                   <VitalRow
                     d="M12 3v18M3 12h18"
-                    label="Born"
-                    value={person.birth_date_text || person.birth_date || 'Unknown'}
+                    label={t('Born')}
+                    value={person.birth_date_text || person.birth_date || t('Unknown')}
                     sub={person.birth_place}
                   />
                   {!person.is_living && (
                     <VitalRow
                       d="M6 21V7a6 6 0 0 1 12 0v14M6 21h12"
-                      label="Died"
-                      value={person.death_date_text || person.death_date || 'Unknown'}
+                      label={t('Died')}
+                      value={person.death_date_text || person.death_date || t('Unknown')}
                       sub={person.death_place}
                     />
                   )}
                   {age !== null && (
                     <VitalRow
                       d="M12 8v4l2.5 2.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                      label={person.is_living ? 'Age' : 'Age at death'}
-                      value={`${age} years`}
+                      label={person.is_living ? t('Age') : t('Age at death')}
+                      value={t('{age} years', { age })}
                     />
                   )}
-                  {person.burial_place && <VitalRow d="M12 3v6m-3-3h6M7 21V9a5 5 0 0 1 10 0v12M5 21h14" label="Buried" value={person.burial_place} />}
-                  {person.cause_of_death && <VitalRow d="M12 9v4m0 4h.01M12 3l9 18H3L12 3Z" label="Cause of death" value={person.cause_of_death} />}
+                  {person.burial_place && <VitalRow d="M12 3v6m-3-3h6M7 21V9a5 5 0 0 1 10 0v12M5 21h14" label={t('Buried')} value={person.burial_place} />}
+                  {person.cause_of_death && <VitalRow d="M12 9v4m0 4h.01M12 3l9 18H3L12 3Z" label={t('Cause of death')} value={person.cause_of_death} />}
                 </div>
               </section>
 
               {/* About */}
               {person.notes && (
                 <section>
-                  <SectionLabel>About</SectionLabel>
+                  <SectionLabel>{t('About')}</SectionLabel>
                   <p className="mt-2 whitespace-pre-line text-[12.5px] leading-6 text-ink-soft">{person.notes}</p>
                 </section>
               )}
@@ -412,10 +416,10 @@ export function PersonPanel({
               {/* Family */}
               <section>
                 <div className="flex items-center justify-between">
-                  <SectionLabel>Family</SectionLabel>
+                  <SectionLabel>{t('Family')}</SectionLabel>
                   {canManage && (
                     <button type="button" onClick={onAddRelative} className="text-[11px] font-semibold text-accent hover:text-accent-strong">
-                      + Add relative
+                      {t('+ Add relative')}
                     </button>
                   )}
                 </div>
@@ -428,7 +432,7 @@ export function PersonPanel({
                       }),
                     )
                   ) : (
-                    <p className="py-2 text-[12.5px] text-ink-muted">No linked relatives yet.</p>
+                    <p className="py-2 text-[12.5px] text-ink-muted">{t('No linked relatives yet.')}</p>
                   )}
                 </div>
               </section>
@@ -438,7 +442,7 @@ export function PersonPanel({
                 <details className="group">
                   <summary className="cursor-pointer list-none">
                     <span className="flex items-center gap-1.5">
-                      <SectionLabel>Imported record</SectionLabel>
+                      <SectionLabel>{t('Imported record')}</SectionLabel>
                       <Icon d="m6 9 6 6 6-6" className="h-3 w-3 text-ink-muted transition group-open:rotate-180" />
                     </span>
                   </summary>
@@ -478,12 +482,12 @@ export function PersonPanel({
                   ))}
                 </ol>
               ) : (
-                <p className="text-[12.5px] text-ink-muted">No timeline facts attached to this person yet.</p>
+                <p className="text-[12.5px] text-ink-muted">{t('No timeline facts attached to this person yet.')}</p>
               )}
 
               {profile?.relationship_facts.length ? (
                 <section>
-                  <SectionLabel>Relationships</SectionLabel>
+                  <SectionLabel>{t('Relationships')}</SectionLabel>
                   <div className="mt-2 space-y-2">
                     {profile.relationship_facts.map((f) => (
                       <div key={f.id} className="rounded-xl border border-line bg-fill-faint p-3">
@@ -522,21 +526,25 @@ export function PersonPanel({
                       )}
                       {m.is_primary && (
                         <span className="absolute left-1 top-1 rounded-full bg-emerald-400 px-1.5 py-px text-[8px] font-bold uppercase text-emerald-950">
-                          Profile
+                          {t('Profile')}
                         </span>
                       )}
                     </a>
                   ))}
                 </div>
               ) : (
-                <p className="text-[12.5px] text-ink-muted">No photos of {person.given_name} yet.</p>
+                <p className="text-[12.5px] text-ink-muted">{t('No photos of {name} yet.', { name: person.given_name })}</p>
               )}
               {canManage && (
                 <button type="button" onClick={onEditPhoto} className="o-btn-secondary o-btn-sm mt-4 w-full">
-                  Add a photo
+                  {t('Add a photo')}
                 </button>
               )}
             </div>
+          )}
+
+          {tab === 'sources' && (
+            <SourcesTab personId={person.id} treeId={person.family_tree_id} canManage={canManage} />
           )}
 
           {tab === 'community' && showInteractions && <InteractionPanel person={person} />}
@@ -548,7 +556,7 @@ export function PersonPanel({
             type="button"
             onClick={onAddRelative}
             className="absolute bottom-6 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-400 text-emerald-950 shadow-[0_10px_28px_-6px_rgba(52,211,153,.65)] transition active:scale-95 lg:hidden"
-            aria-label="Add a relative"
+            aria-label={t('Add a relative')}
           >
             <Icon d="M12 5v14M5 12h14" className="h-6 w-6" />
           </button>

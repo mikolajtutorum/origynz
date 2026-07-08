@@ -3,11 +3,13 @@ import { useMutation } from '@tanstack/react-query';
 import { globalTreeApi, type RelationshipPath } from '@core/api/endpoints/globalTree';
 import { ApiError } from '@core/api/client';
 import type { Person } from '@core/models';
+import { useT } from '@core/i18n';
 import { AppLayout } from '../components/AppLayout';
 import { PersonSearchInput } from '../components/PersonSearchInput';
 import { Button, FormError } from '../components/ui';
 
 export function RelationshipCalculator() {
+  const t = useT();
   const [a, setA] = useState<Person | null>(null);
   const [b, setB] = useState<Person | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function RelationshipCalculator() {
     } catch (e) {
       setError(
         e instanceof ApiError && e.status === 403
-          ? 'Both people must belong to a Global Tree–enabled tree.'
+          ? t('Both people must belong to a Global Tree–enabled tree.')
           : (e as Error).message,
       );
     }
@@ -36,21 +38,21 @@ export function RelationshipCalculator() {
     <AppLayout>
       <div className="space-y-8">
         <header className="max-w-2xl space-y-2">
-          <p className="o-eyebrow">Global Tree</p>
-          <h1 className="o-display text-3xl sm:text-4xl">Relationship calculator</h1>
+          <p className="o-eyebrow">{t('Global Tree')}</p>
+          <h1 className="o-display text-3xl sm:text-4xl">{t('Relationship calculator')}</h1>
           <p className="text-[15px] leading-7 text-ink-muted">
-            Pick any two people and follow the chain of parents, spouses, and children that connects them.
+            {t('Pick any two people and follow the chain of parents, spouses, and children that connects them.')}
           </p>
         </header>
 
         <div className="o-card max-w-2xl p-6 sm:p-7">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <PersonSearchInput label="Person A" selected={a} onSelect={setA} />
-            <PersonSearchInput label="Person B" selected={b} onSelect={setB} />
+            <PersonSearchInput label={t('Person A')} selected={a} onSelect={setA} />
+            <PersonSearchInput label={t('Person B')} selected={b} onSelect={setB} />
           </div>
           <div className="mt-5">
             <Button onClick={run} disabled={!a || !b} loading={calc.isPending}>
-              Calculate relationship
+              {t('Calculate relationship')}
             </Button>
           </div>
           {error && (
@@ -64,7 +66,7 @@ export function RelationshipCalculator() {
           <div className="o-card max-w-2xl p-6 sm:p-7">
             {result.connected ? (
               <>
-                <h2 className="text-base font-semibold text-ink">Connection found</h2>
+                <h2 className="text-base font-semibold text-ink">{t('Connection found')}</h2>
                 <ol className="mt-4 flex flex-col">
                   {result.path.map((step, i) => (
                     <li key={step.id} className="relative flex gap-4 pb-5 last:pb-0">
@@ -84,7 +86,7 @@ export function RelationshipCalculator() {
               </>
             ) : (
               <div className="o-empty border-0 bg-transparent p-0">
-                No connection found between these two people in the Global Tree.
+                {t('No connection found between these two people in the Global Tree.')}
               </div>
             )}
           </div>

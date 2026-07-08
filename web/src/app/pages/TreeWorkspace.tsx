@@ -14,6 +14,7 @@ import type { RelationRole } from '@core/api/endpoints/people';
 import type { Person, RelationshipType } from '@core/models';
 import { getBlob } from '@core/api/client';
 import { gedcomApi } from '@core/api/endpoints/gedcom';
+import { useT } from '@core/i18n';
 import { AppLayout } from '../components/AppLayout';
 import { Button, FormError, Modal, Select } from '../components/ui';
 import { PersonSearchInput } from '../components/PersonSearchInput';
@@ -22,6 +23,7 @@ import { TreeCanvas } from '../components/tree/TreeCanvas';
 import { PersonPanel } from '../components/tree/PersonPanel';
 import { PersonForm } from '../components/tree/PersonForm';
 import { AddRelativeOverlay } from '../components/tree/AddRelativeOverlay';
+import { SharingModal } from '../components/tree/SharingModal';
 import { applyApiErrors } from '../lib/applyApiErrors';
 
 // Sensible defaults for the add-person form, derived from the chosen relation.
@@ -48,6 +50,7 @@ function relativeDefaults(role: RelationRole, anchor: Person): Partial<PersonFor
 }
 
 function ConnectModal({ treeId, person, onClose }: { treeId: string; person: Person; onClose: () => void }) {
+  const t = useT();
   const create = useCreateRelationship(treeId);
   const [other, setOther] = useState<Person | null>(null);
   const [type, setType] = useState<RelationshipType>('parent');
@@ -66,20 +69,20 @@ function ConnectModal({ treeId, person, onClose }: { treeId: string; person: Per
   };
 
   return (
-    <Modal title="Connect to existing person" onClose={onClose}>
+    <Modal title={t('Connect to existing person')} onClose={onClose}>
       <div className="flex flex-col gap-3">
         <FormError message={error} />
         <p className="text-sm text-ink-soft">
-          Link <span className="font-medium text-ink">{person.display_name}</span> to another person already in this tree.
+          {t('Link {name} to another person already in this tree.', { name: person.display_name })}
         </p>
-        <Select label="Relationship" value={type} onChange={(e) => setType(e.target.value as RelationshipType)}>
-          <option value="parent">Is a parent of…</option>
-          <option value="child">Is a child of…</option>
-          <option value="spouse">Is a spouse of…</option>
+        <Select label={t('Relationship')} value={type} onChange={(e) => setType(e.target.value as RelationshipType)}>
+          <option value="parent">{t('Is a parent of…')}</option>
+          <option value="child">{t('Is a child of…')}</option>
+          <option value="spouse">{t('Is a spouse of…')}</option>
         </Select>
-        <PersonSearchInput label="Person" selected={other} onSelect={setOther} treeId={treeId} excludeId={person.id} />
+        <PersonSearchInput label={t('Person')} selected={other} onSelect={setOther} treeId={treeId} excludeId={person.id} />
         <Button onClick={submit} loading={create.isPending} disabled={!other}>
-          Connect
+          {t('Connect')}
         </Button>
       </div>
     </Modal>
@@ -87,6 +90,7 @@ function ConnectModal({ treeId, person, onClose }: { treeId: string; person: Per
 }
 
 function PhotoModal({ treeId, person, onClose }: { treeId: string; person: Person; onClose: () => void }) {
+  const t = useT();
   const upload = useUploadMedia(treeId);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -108,12 +112,12 @@ function PhotoModal({ treeId, person, onClose }: { treeId: string; person: Perso
   };
 
   return (
-    <Modal title={`Photo for ${person.display_name}`} onClose={onClose}>
+    <Modal title={t('Photo for {name}', { name: person.display_name })} onClose={onClose}>
       <div className="flex flex-col gap-3">
         <FormError message={error} />
         <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" />
         <Button onClick={submit} loading={upload.isPending} disabled={!file}>
-          Upload photo
+          {t('Upload photo')}
         </Button>
       </div>
     </Modal>
@@ -131,6 +135,7 @@ function HomePersonModal({
   onClose: () => void;
   onChosen: (personId: string) => void;
 }) {
+  const t = useT();
   const update = useUpdateTree(treeId);
   const [person, setPerson] = useState<Person | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -147,16 +152,15 @@ function HomePersonModal({
   };
 
   return (
-    <Modal title="Which person is you?" onClose={onClose}>
+    <Modal title={t('Which person is you?')} onClose={onClose}>
       <div className="flex flex-col gap-3">
         <FormError message={error} />
         <p className="text-sm text-ink-soft">
-          We couldn&apos;t tell which person in this file is you. Pick yourself (or whoever the tree should centre on) to
-          set the home person.
+          {t("We couldn't tell which person in this file is you. Pick yourself (or whoever the tree should centre on) to set the home person.")}
         </p>
-        <PersonSearchInput label="Home person" selected={person} onSelect={setPerson} treeId={treeId} />
+        <PersonSearchInput label={t('Home person')} selected={person} onSelect={setPerson} treeId={treeId} />
         <Button onClick={submit} loading={update.isPending} disabled={!person}>
-          Set home person
+          {t('Set home person')}
         </Button>
       </div>
     </Modal>
@@ -164,6 +168,7 @@ function HomePersonModal({
 }
 
 export function TreeWorkspace() {
+  const t = useT();
   const { id = '' } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -172,6 +177,7 @@ export function TreeWorkspace() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [modal, setModal] = useState<'edit' | 'connect' | 'photo' | null>(null);
+  const [sharing, setSharing] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   // Add-relative flow: pick a relative kind in the radial overlay (role: null),
   // then fill in the add-person form (role set).
@@ -209,9 +215,9 @@ export function TreeWorkspace() {
     return (
       <AppLayout bleed>
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-[#fbf8f3]">
-          <p className="text-red-600">Could not load tree: {(error as Error)?.message}</p>
+          <p className="text-red-600">{t('Could not load tree: {message}', { message: (error as Error)?.message ?? '' })}</p>
           <Link to="/trees" className="text-blue-600 underline">
-            Back to trees
+            {t('Back to trees')}
           </Link>
         </div>
       </AppLayout>
@@ -329,7 +335,7 @@ export function TreeWorkspace() {
             <Link
               to="/trees"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#68727b] hover:bg-[#f3f5f7] hover:text-[#2563eb] lg:hidden"
-              aria-label="All trees"
+              aria-label={t('All trees')}
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5m7-7-7 7 7 7" />
@@ -337,13 +343,28 @@ export function TreeWorkspace() {
             </Link>
             <div className="min-w-0 flex-1 lg:flex-initial">
               <Link to="/trees" className="hidden text-[13px] text-[#68727b] hover:text-[#2563eb] lg:inline">
-                ← All trees
+                ← {t('All trees')}
               </Link>
               <h1 className="truncate text-[15px] font-semibold leading-tight text-[#1f252b] lg:text-[20px]">{data.tree.name}</h1>
               <p className="truncate text-[11px] leading-tight text-[#68727b] lg:text-[13px]">
-                {data.people.length} people<span className="max-lg:hidden"> · your role: {data.access_level}</span>
+                {t('{count} people', { count: data.people.length })}<span className="max-lg:hidden"> · {t('your role: {role}', { role: t(data.access_level) })}</span>
               </p>
             </div>
+            {data.can_manage && (
+              <button
+                onClick={() => setSharing(true)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#1f252b] hover:bg-[#f7f9fb] lg:h-auto lg:w-auto lg:gap-2 lg:rounded-md lg:border lg:border-[#d4dae1] lg:px-4 lg:py-2 lg:text-sm lg:font-medium"
+                aria-label={t('Share')}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+                </svg>
+                <span className="max-lg:hidden">{t('Share')}</span>
+              </button>
+            )}
             {data.can_manage && (
               <button
                 onClick={async () => {
@@ -351,14 +372,14 @@ export function TreeWorkspace() {
                   downloadBlob(blob, `${data.tree.name}.ged`);
                 }}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#1f252b] hover:bg-[#f7f9fb] lg:h-auto lg:w-auto lg:gap-2 lg:rounded-md lg:border lg:border-[#d4dae1] lg:px-4 lg:py-2 lg:text-sm lg:font-medium"
-                aria-label="Export GEDCOM"
+                aria-label={t('Export GEDCOM')}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 3v12" />
                   <path d="m7 10 5 5 5-5" />
                   <path d="M5 21h14" />
                 </svg>
-                <span className="max-lg:hidden">Export GEDCOM</span>
+                <span className="max-lg:hidden">{t('Export GEDCOM')}</span>
               </button>
             )}
           </div>
@@ -375,7 +396,7 @@ export function TreeWorkspace() {
               />
             ) : (
               <p className="rounded-xl border border-dashed border-neutral-300 p-10 text-center text-neutral-500">
-                This tree has no people yet.
+                {t('This tree has no people yet.')}
               </p>
             )}
           </div>
@@ -383,9 +404,9 @@ export function TreeWorkspace() {
       </div>
 
       {modal === 'edit' && selectedPerson && (
-        <Modal title={`Edit ${selectedPerson.display_name}`} onClose={() => setModal(null)}>
+        <Modal title={t('Edit {name}', { name: selectedPerson.display_name })} onClose={() => setModal(null)}>
           <PersonForm
-            submitLabel="Save changes"
+            submitLabel={t('Save changes')}
             submitting={updatePerson.isPending}
             error={modalError}
             defaultValues={{
@@ -418,11 +439,11 @@ export function TreeWorkspace() {
       {/* Step 2: fill in the new person's details. */}
       {relativeFlow && relativeFlow.role && relativeAnchor && (
         <Modal
-          title={`Add ${ROLE_LABEL[relativeFlow.role]} of ${relativeAnchor.display_name}`}
+          title={t('Add {role} of {name}', { role: t(ROLE_LABEL[relativeFlow.role]), name: relativeAnchor.display_name })}
           onClose={() => setRelativeFlow(null)}
         >
           <PersonForm
-            submitLabel="Add relative"
+            submitLabel={t('Add relative')}
             submitting={addRelative.isPending}
             error={modalError}
             defaultValues={relativeDefaults(relativeFlow.role, relativeAnchor)}
@@ -438,6 +459,8 @@ export function TreeWorkspace() {
       {modal === 'photo' && selectedPerson && (
         <PhotoModal treeId={id} person={selectedPerson} onClose={() => setModal(null)} />
       )}
+
+      {sharing && <SharingModal treeId={id} onClose={() => setSharing(false)} />}
 
       {chooseHome && data.can_manage && (
         <HomePersonModal
